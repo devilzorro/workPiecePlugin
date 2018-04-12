@@ -18,4 +18,6 @@ public:
 	string oldWorkPList;
 	string newWorkPList;
 
+	string loginRet;
+
 };

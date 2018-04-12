@@ -4,6 +4,7 @@ MsgQ::MsgQ()
 {
 	oldWorkPList = "";
 	newWorkPList = "";
+	loginRet = "";
 }
 
 MsgQ::~MsgQ()

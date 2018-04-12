@@ -12,7 +12,7 @@ FCworkPiece::FCworkPiece()
 	const char *ip = "127.0.0.1";
 //	char *port = "7102";
 	m_msgQ = new MsgQ();
-	m_dealer = new RpcDealerZMQ(ip,"7102");
+//	m_dealer = new RpcDealerZMQ(ip,"7102");
 	localMQStatus = AccessMQ("FCworkPiece","","",1883,300,localMQConnLost,localMQRecv);
 	if (localMQStatus == 0)
 	{
@@ -102,47 +102,134 @@ void FCworkPiece::localMQConnLost()
 string FCworkPiece::FCService(string servjson)
 {
 	printf("FCService recv:%s\n",servjson.c_str());
+	Json::Reader reader;
+	Json::Value jsonRecv;
+
+	Json::Value replyRoot;
+	Json::Value replyData;
+	Json::Value replyArrray;
+	string retStr = "";
 	if(servjson != "")
 	{
-		Json::Reader reader;
-		Json::Value jsonRecv;
-		if(reader.parse(servjson,jsonRecv))
+		string strBeJson = servjson.substr(0,1);
+		if(strBeJson == "{")
 		{
-			string strWoPequest = jsonRecv["woRequest"].asString();
-			if(strWoPequest == "all")
+			if(reader.parse(servjson,jsonRecv))
 			{
-				if(m_msgQ->newWorkPList != "")
+				string strWoRequest = jsonRecv["woRequest"].asString();
+				if(strWoRequest == "all")
 				{
-					printf("localMQ list content:%s\n",m_msgQ->newWorkPList.c_str());
-					return m_msgQ->newWorkPList;
+					//发起请求工单列表
+					replyRoot["woResponse"] = 0;
 				}
+				else if(strWoRequest == "all_result")
+				{
+					//返回请求工单结果
+					if(m_msgQ->newWorkPList != "")
+					{
+						replyRoot["woResponse"] = 1;
+						replyRoot["data"] = m_msgQ->newWorkPList;
+						retStr = replyRoot.toStyledString();
+						printf("localMQ list content:%s\n",m_msgQ->newWorkPList.c_str());
+					}
+				}
+				else if(strWoRequest == "init")
+				{
+					//初始化请求
+					replyRoot["woResponse"] = 0;
+				}
+				else if(strWoRequest == "init_result")
+				{
+					replyRoot["woResponse"] = 1;
+				}
+				else if(strWoRequest == "login")
+				{
+					Json::Value jsonData = jsonRecv["data"];
+					string strUserName = jsonData["userName"].asString();
+					printf("fc recv login data content:%s\n",strUserName.c_str());
+					if(sendlocalMQ("login test msg","woLogin") != -1)
+					{
+						replyRoot["woResponse"] = 0;
+					}
+					else
+					{
+						replyRoot["woResponse"] = -1;
+					}
+				}
+				else if(strWoRequest == "login_result")
+				{
+
+				}
+			}
+			else
+			{
+				replyRoot["woResponse"] = -2;
 			}
 		}
 		else
 		{
-			return "json type false";
+			replyRoot["woResponse"] = -2;
 		}
 	}
-	return "null";
+	retStr = replyRoot.toStyledString();
+	return retStr;
 }
 
 string FCworkPiece::sendFC(string msgContent)
 {
-	if(m_dealer)
-	{
-		string sendResp = m_dealer->SendPluginCmd(keystr,msgContent);
-		return sendResp;
-	}
-	else
-	{
-		return "";
-	}
+//	if(m_dealer)
+//	{
+//		string sendResp = m_dealer->SendPluginCmd(keystr,msgContent);
+//		return sendResp;
+//	}
+//	else
+//	{
+//		return "";
+//	}
+	return "";
 }
 
-string FCworkPiece::sendlocalMQ(string msgContent)
+int FCworkPiece::sendlocalMQ(string msgContent,string topic)
 {
 	if(localMQStatus == 0)
 	{
-		sendLocalMsg(msgContent.c_str(),"");
+		return sendLocalMsg(msgContent.c_str(),topic.c_str());
 	}
+	else
+	{
+		return -1;
+	}
+}
+
+vector<string> FCworkPiece::split(string strContent,string mark)
+{
+	string::size_type pos;
+	vector<string> result;
+	strContent += mark;
+	int size = strContent.size();
+	for(int i=0; i<size; i++)
+	{
+		pos = strContent.find(mark,i);
+		if(pos<size)
+		{
+			string s = strContent.substr(i,pos-i);
+			result.push_back(s);
+			i = pos+mark.size()-1;
+		}
+	}
+	return result;
+}
+
+bool FCworkPiece::isContain(string strContent,string mark)
+{
+	bool retStatus = false;
+	for(int i=0;i<strContent.size();i++)
+	{
+		if(strContent.find(mark,i) != string::npos)
+		{
+			retStatus = true;
+			break;
+		}
+	}
+	return retStatus;
 }

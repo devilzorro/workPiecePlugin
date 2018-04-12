@@ -27,8 +27,12 @@ public:
 	virtual ~FCworkPiece();
 
 	virtual string FCService(string servjson);
-	string sendlocalMQ(string msgContent);
+
+	int sendlocalMQ(string msgContent,string topic);
 	string sendFC(string msgContent);
+
+	vector<string> split(string strContent,string mark);
+	bool isContain(string strContent,string mark);
 
 	static void localMQRecv(char *msgContent,char *topicName,int topicLen);
 	static void localMQConnLost();
@@ -39,7 +43,7 @@ public:
 	virtual void processLocalMsgThreadRun();
 
 public:
-	RpcDealerZMQ *m_dealer;
+//	RpcDealerZMQ *m_dealer;
 	MsgQ *m_msgQ;
 	int localMQStatus;
 	bool woStatus;
