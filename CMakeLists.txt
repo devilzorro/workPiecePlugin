@@ -35,6 +35,6 @@ endforeach()
 
 
 ADD_LIBRARY(workPiece SHARED ${source_files} )
-TARGET_LINK_LIBRARIES(workPiece localMQ paho-mqtt3as finch pthread)
+TARGET_LINK_LIBRARIES(workPiece localMQ paho-mqtt3as finch pthread curl)
 #testauthorize
 INSTALL(TARGETS workPiece DESTINATION lib/fc_plugin)

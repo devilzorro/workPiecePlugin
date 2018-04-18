@@ -147,7 +147,8 @@ string FCworkPiece::FCService(string servjson)
 					Json::Value jsonData = jsonRecv["data"];
 					string strUserName = jsonData["userName"].asString();
 					printf("fc recv login data content:%s\n",strUserName.c_str());
-					if(sendlocalMQ("login test msg","woLogin") != -1)
+					string strSendTest = "login test msg: " + strUserName;
+					if(sendlocalMQ(strSendTest.c_str(),"woLogin") != -1)
 					{
 						replyRoot["woResponse"] = 0;
 					}
