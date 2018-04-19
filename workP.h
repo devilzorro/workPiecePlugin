@@ -11,6 +11,7 @@
 #include <pthread.h>
 #include "zfinch.h"
 #include "msgQ.h"
+#include "iniConfig.h"
 
 using namespace std;
 
@@ -45,8 +46,10 @@ public:
 public:
 //	RpcDealerZMQ *m_dealer;
 	MsgQ *m_msgQ;
+	CIni *m_ini;
 	int localMQStatus;
 	bool woStatus;
+	string m_machineId;
 
 private:
 	static FCworkPiece* m_workPiece;

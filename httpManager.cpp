@@ -36,5 +36,6 @@ size_t HTTPManager::write_str_call_back(char *ptr, size_t size, size_t nmemb, vo
 
 string HTTPManager::getStr(string strUrl)
 {
-	return "";
+	string strRet = "";
+	return strRet;
 }

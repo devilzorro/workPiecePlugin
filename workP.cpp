@@ -13,6 +13,7 @@ FCworkPiece::FCworkPiece()
 //	char *port = "7102";
 	m_msgQ = new MsgQ();
 //	m_dealer = new RpcDealerZMQ(ip,"7102");
+	m_ini = new CIni();
 	localMQStatus = AccessMQ("FCworkPiece","","",1883,300,localMQConnLost,localMQRecv);
 	if (localMQStatus == 0)
 	{
@@ -102,6 +103,22 @@ void FCworkPiece::localMQConnLost()
 string FCworkPiece::FCService(string servjson)
 {
 	printf("FCService recv:%s\n",servjson.c_str());
+
+//	if(m_ini->OpenFile("/home/fiyang/nut/config/wisservice.ini","r") == INI_SUCCESS)
+//	{
+//		printf("open file success!\n");
+//	}
+//	char *postUrl = m_ini->GetStr("WisTaskRfid","PostUrl");
+//	m_ini->CloseFile();
+//	printf("readconfig content:%s\n",postUrl);
+	if(m_ini->OpenFile("/home/fiyang/nut/config/moon/iport.ini","r") == INI_SUCCESS)
+	{
+		printf("open iport file success!\n");
+	}
+	char *machineId = m_ini->GetStr("iPort","MachineId");
+	m_ini->CloseFile();
+	printf("readconfig iport content:%s\n",machineId);
+
 	Json::Reader reader;
 	Json::Value jsonRecv;
 
