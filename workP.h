@@ -12,6 +12,7 @@
 #include "zfinch.h"
 #include "msgQ.h"
 #include "iniConfig.h"
+#include "httpManager.h"
 
 using namespace std;
 
@@ -43,13 +44,18 @@ public:
 	virtual void sendLocalMsgThreadRun();
 	virtual void processLocalMsgThreadRun();
 
+	string getEnvPath();
+
 public:
 //	RpcDealerZMQ *m_dealer;
 	MsgQ *m_msgQ;
 	CIni *m_ini;
+	HTTPManager *m_httpManager;
 	int localMQStatus;
 	bool woStatus;
 	string m_machineId;
+	string m_wisUrl;
+	string m_strEvo;
 
 private:
 	static FCworkPiece* m_workPiece;

@@ -23,7 +23,11 @@ public:
 	static size_t write_str_call_back(char *ptr, size_t size, size_t nmemb, void *userdata);
 
 	string getStr(string strUrl);
+	bool downloadFile(string downloadUrl,string storePath,string strMd5);
+	string GetFileMd5(char *path, int md5_len);
 
+private:
+	void ByteToHexStr(const unsigned char* source, char* dest, int sourceLen);
 };
 
 #endif /* HTTPMANAGER_H_ */

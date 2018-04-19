@@ -2,7 +2,9 @@
 #include "localMQ.h"
 #include "json.h"
 #include <stdio.h>
+#include <stdlib.h>
 
+#define HOMEPATH "NUTHOME"
 FCworkPiece* FCworkPiece::m_workPiece;
 
 FCworkPiece::FCworkPiece()
@@ -10,10 +12,13 @@ FCworkPiece::FCworkPiece()
 	m_workPiece = this;
 	woStatus = true;
 	const char *ip = "127.0.0.1";
+	m_strEvo = getenv(HOMEPATH);
 //	char *port = "7102";
 	m_msgQ = new MsgQ();
 //	m_dealer = new RpcDealerZMQ(ip,"7102");
 	m_ini = new CIni();
+	m_httpManager = new HTTPManager();
+
 	localMQStatus = AccessMQ("FCworkPiece","","",1883,300,localMQConnLost,localMQRecv);
 	if (localMQStatus == 0)
 	{
@@ -104,20 +109,11 @@ string FCworkPiece::FCService(string servjson)
 {
 	printf("FCService recv:%s\n",servjson.c_str());
 
-//	if(m_ini->OpenFile("/home/fiyang/nut/config/wisservice.ini","r") == INI_SUCCESS)
-//	{
-//		printf("open file success!\n");
-//	}
-//	char *postUrl = m_ini->GetStr("WisTaskRfid","PostUrl");
-//	m_ini->CloseFile();
-//	printf("readconfig content:%s\n",postUrl);
-	if(m_ini->OpenFile("/home/fiyang/nut/config/moon/iport.ini","r") == INI_SUCCESS)
-	{
-		printf("open iport file success!\n");
-	}
-	char *machineId = m_ini->GetStr("iPort","MachineId");
-	m_ini->CloseFile();
-	printf("readconfig iport content:%s\n",machineId);
+	printf("machineId:%s\n",m_machineId.c_str());
+	printf("url:%s\n",m_wisUrl.c_str());
+
+	string strMd5 = m_httpManager->GetFileMd5("/home/fiyang/nut/config/moon/iport.ini",32);
+	printf("file md5 content:%s\n",strMd5.c_str());
 
 	Json::Reader reader;
 	Json::Value jsonRecv;
@@ -153,6 +149,26 @@ string FCworkPiece::FCService(string servjson)
 				else if(strWoRequest == "init")
 				{
 					//初始化请求
+					//获取机床序列号
+					string iportPath = m_strEvo + "/config/moon/iport.ini";
+					printf("iport ini path:%s\n",iportPath.c_str());
+					if(m_ini->OpenFile(iportPath.c_str(),"r") == INI_SUCCESS)
+					{
+						m_machineId = m_ini->GetStr("iPort","MachineId");
+					}
+					m_ini->CloseFile();
+
+					//获取wis服务器地址
+					string wisPath = m_strEvo + "/config/wisservice.ini";
+					printf("wis ini path:%s\n",wisPath.c_str());
+					if(m_ini->OpenFile(wisPath.c_str(),"r") == INI_SUCCESS)
+					{
+						m_wisUrl = m_ini->GetStr("WisTaskLogin","PostUrl");
+				//		vector<string> vcPath = split(tmpPath,"?");
+				//		m_wisUrl = vcPath[0] + "?";
+					}
+					m_ini->CloseFile();
+
 					replyRoot["woResponse"] = 0;
 				}
 				else if(strWoRequest == "init_result")

@@ -7,6 +7,9 @@
 #include "httpManager.h"
 #include <curl/curl.h>
 #include <curl/easy.h>
+#include <openssl/md5.h>
+#include <string.h>
+#include <algorithm>
 
 HTTPManager::HTTPManager()
 {
@@ -36,6 +39,145 @@ size_t HTTPManager::write_str_call_back(char *ptr, size_t size, size_t nmemb, vo
 
 string HTTPManager::getStr(string strUrl)
 {
-	string strRet = "";
-	return strRet;
+	string strret = "";
+	CURL* pCurl = curl_easy_init();
+	if(pCurl != NULL)
+	{
+		curl_easy_setopt(pCurl,CURLOPT_WRITEDATA,(void*)&strret);
+		//curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 30 );
+		curl_easy_setopt(pCurl,CURLOPT_WRITEFUNCTION,write_str_call_back);
+		curl_easy_setopt(pCurl, CURLOPT_MAXREDIRS, 5);
+		curl_easy_setopt(pCurl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_easy_setopt(pCurl,CURLOPT_URL,strUrl.c_str());
+		if(curl_easy_perform(pCurl) == CURLE_OK)
+		{
+			curl_easy_cleanup(pCurl);
+			printf("curl download finish!\n");
+		}
+		else
+		{
+			curl_easy_cleanup(pCurl);
+			printf("curl download fail!\n");
+		}
+	}
+	else
+	{
+		printf("curl init fail!\n");
+	}
+	return strret;
+}
+
+bool HTTPManager::downloadFile(string downloadUrl,string storePath,string strMd5)
+{
+	CURL* pCurl = curl_easy_init();
+	if(pCurl != NULL)
+	{
+		FILE *pfile = fopen(storePath.c_str(),"wb");
+		curl_easy_setopt(pCurl,CURLOPT_WRITEDATA,(void*)pfile);
+		//curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 30 );
+		curl_easy_setopt(pCurl,CURLOPT_WRITEFUNCTION,write_data);
+		curl_easy_setopt(pCurl, CURLOPT_MAXREDIRS, 5);
+		curl_easy_setopt(pCurl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_easy_setopt(pCurl,CURLOPT_URL,downloadUrl.c_str());
+		if(curl_easy_perform(pCurl) == CURLE_OK)
+		{
+			fclose(pfile);
+			curl_easy_cleanup(pCurl);
+			printf("curl download finish!\n");
+		}
+		else
+		{
+			fclose(pfile);
+			curl_easy_cleanup(pCurl);
+			printf("curl download fail!\n");
+			return false;
+		}
+	}
+	else
+	{
+		printf("curl init fail!\n");
+		return false;
+	}
+	return true;
+}
+
+string HTTPManager::GetFileMd5(char *path, int md5_len)
+{
+	FILE *fp;
+	#ifdef WIN32
+	fopen_s(&fp,path, "rb");
+	#else
+	fp = fopen(path,"rb");
+	#endif
+	MD5_CTX mdContext;
+	int bytes;
+	unsigned char data[1024];
+	unsigned char digest[32] = { 0 };
+	char file_md5[35];
+	string strfile_md5;
+	//int i;
+
+	if (fp == NULL)
+	{
+		fprintf(stderr, "fopen %s failed\n", path);
+		return "";
+	}
+
+	MD5_Init(&mdContext);
+	while ((bytes = fread(data, 1, 1024, fp)) != 0)
+	{
+		MD5_Update(&mdContext, data, bytes);
+	}
+	MD5_Final(digest, &mdContext);
+
+	memset(file_md5, '\0', 35);
+
+	if (md5_len == 16)
+	{
+		ByteToHexStr(digest, file_md5, 32);
+		strfile_md5 = file_md5;
+		strfile_md5 = strfile_md5.substr(0, 16);
+		transform(strfile_md5.begin(), strfile_md5.end(), strfile_md5.begin(), (int (*)(int))tolower);
+
+	}
+	else if (md5_len == 32)
+	{
+		ByteToHexStr(digest, file_md5, 32);
+		strfile_md5 = file_md5;
+		strfile_md5 = strfile_md5.substr(0, 32);
+		transform(strfile_md5.begin(), strfile_md5.end(), strfile_md5.begin(), (int (*)(int))tolower);
+	}
+	else
+	{
+		fclose(fp);
+		return "";
+	}
+
+	fclose(fp);
+	return strfile_md5;
+}
+
+void HTTPManager::ByteToHexStr(const unsigned char* source, char* dest, int sourceLen)
+{
+	short i;
+	unsigned char highByte, lowByte;
+
+	for (i = 0; i < sourceLen; i++)
+	{
+		highByte = source[i] >> 4;
+		lowByte = source[i] & 0x0f;
+
+		highByte += 0x30;
+
+		if (highByte > 0x39)
+			dest[i * 2] = highByte + 0x07;
+		else
+			dest[i * 2] = highByte;
+
+		lowByte += 0x30;
+		if (lowByte > 0x39)
+			dest[i * 2 + 1] = lowByte + 0x07;
+		else
+			dest[i * 2 + 1] = lowByte;
+	}
 }

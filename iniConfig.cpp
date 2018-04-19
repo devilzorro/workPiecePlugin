@@ -82,7 +82,7 @@ INI_RES CIni::OpenFile(const char* pathName, const char* type)
    mLastMap.clear();
    szLastMainKey =  szLine ;
    m_Map[ szLastMainKey ] = mLastMap;
-   printf("ini main key:%s\n",szLastMainKey.c_str());
+//   printf("ini main key:%s\n",szLastMainKey.c_str());
   }
   else
   {
@@ -96,11 +96,14 @@ INI_RES CIni::OpenFile(const char* pathName, const char* type)
     szSubValue = szLine.substr( nIndexPos+1,szLine.length()-nIndexPos-1);
     szSubKey = cutFront(szSubKey," ");
     szSubKey = cutEnd(szSubKey," ");
-    szSubValue = cutFront(szSubValue," ");
-    szSubValue = cutEnd(szSubValue," ");
+//    if(szSubValue != ""||szSubValue != " ")
+//    {
+//    	szSubValue = cutFront(szSubValue," ");
+//    	szSubValue = cutEnd(szSubValue," ");
+//    }
     mLastMap[szSubKey] = szSubValue ;
-    printf("subkey content:%s***",szSubKey.c_str());
-    printf("subVal content:%s\n",szSubValue.c_str());
+//    printf("subkey content:%s***",szSubKey.c_str());
+//    printf("subVal content:%s\n",szSubValue.c_str());
    }
    else
    {
@@ -150,11 +153,11 @@ INI_RES CIni::GetKey(const char* mAttr, const char* cAttr, char* pValue)
 
  string sTemp = mKey[ cAttr ];
 
- printf("get ini value string:%s\n",sTemp.c_str());
+// printf("get ini value string:%s\n",sTemp.c_str());
 
  strcpy( pValue,sTemp.c_str() );
 
- printf("get ini value char:%s\n",pValue);
+// printf("get ini value char:%s\n",pValue);
 
     return INI_SUCCESS;
 }
@@ -196,6 +199,19 @@ char *CIni::GetStr(const char* mAttr, const char* cAttr )
  {
   strcpy( m_szKey,"NULL" );
  }
+
+ string tmpStr = m_szKey;
+ if(tmpStr != "" || tmpStr != " ")
+ {
+	 tmpStr = cutFront(tmpStr," ");
+	 tmpStr = cutEnd(tmpStr," ");
+	 for(int i= 0;i<tmpStr.length();i++)
+	 {
+		 m_szKey[i] = tmpStr[i];
+	 }
+	 m_szKey[tmpStr.length()] = '\0';
+ }
+// m_szKey = tmpStr.c_str();
 
  return m_szKey;
 
