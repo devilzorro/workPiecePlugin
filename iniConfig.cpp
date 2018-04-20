@@ -86,24 +86,23 @@ INI_RES CIni::OpenFile(const char* pathName, const char* type)
   }
   else
   {
-
-
    //是否是子键
-   if( nIndexPos = szLine.find("=" ),string::npos != nIndexPos)
+   if( nIndexPos = szLine.find("="),string::npos != nIndexPos)
    {
     string szSubKey,szSubValue;
     szSubKey = szLine.substr( 0,nIndexPos );
     szSubValue = szLine.substr( nIndexPos+1,szLine.length()-nIndexPos-1);
     szSubKey = cutFront(szSubKey," ");
     szSubKey = cutEnd(szSubKey," ");
-//    if(szSubValue != ""||szSubValue != " ")
-//    {
-//    	szSubValue = cutFront(szSubValue," ");
-//    	szSubValue = cutEnd(szSubValue," ");
-//    }
+    if(szSubValue != ""&&szSubValue != " ")
+    {
+    	szSubValue = cutFront(szSubValue," ");
+    	szSubValue = cutEnd(szSubValue," ");
+    }
     mLastMap[szSubKey] = szSubValue ;
 //    printf("subkey content:%s***",szSubKey.c_str());
 //    printf("subVal content:%s\n",szSubValue.c_str());
+    m_Map[ szLastMainKey ] = mLastMap;
    }
    else
    {
@@ -113,7 +112,7 @@ INI_RES CIni::OpenFile(const char* pathName, const char* type)
 
  }
  //插入最后一次主键
- m_Map[ szLastMainKey ] = mLastMap;
+// m_Map[ szLastMainKey ] = mLastMap;
 
     return INI_SUCCESS;
 }
@@ -148,16 +147,24 @@ INI_RES CIni::CloseFile()
 ******************************************************************************/
 INI_RES CIni::GetKey(const char* mAttr, const char* cAttr, char* pValue)
 {
+ KEYMAP mKey = m_Map[mAttr];
 
-    KEYMAP mKey = m_Map[ mAttr ];
+// map<string,string>::iterator it;
+// it = mKey.begin();
+// while(it != mKey.end())
+// {
+//	 printf("getKey key:%s\n",it->first.c_str());
+//	 printf("getKey val:%s\n",it->second.c_str());
+//	 it++;
+// }
 
- string sTemp = mKey[ cAttr ];
+ string sTemp = mKey[cAttr];
 
-// printf("get ini value string:%s\n",sTemp.c_str());
+ printf("get ini value string:%s\n",sTemp.c_str());
 
  strcpy( pValue,sTemp.c_str() );
 
-// printf("get ini value char:%s\n",pValue);
+ printf("get ini value char:%s\n",pValue);
 
     return INI_SUCCESS;
 }
@@ -200,17 +207,17 @@ char *CIni::GetStr(const char* mAttr, const char* cAttr )
   strcpy( m_szKey,"NULL" );
  }
 
- string tmpStr = m_szKey;
- if(tmpStr != "" || tmpStr != " ")
- {
-	 tmpStr = cutFront(tmpStr," ");
-	 tmpStr = cutEnd(tmpStr," ");
-	 for(int i= 0;i<tmpStr.length();i++)
-	 {
-		 m_szKey[i] = tmpStr[i];
-	 }
-	 m_szKey[tmpStr.length()] = '\0';
- }
+// string tmpStr = m_szKey;
+// if(tmpStr != "" || tmpStr != " ")
+// {
+//	 tmpStr = cutFront(tmpStr," ");
+//	 tmpStr = cutEnd(tmpStr," ");
+//	 for(int i= 0;i<tmpStr.length();i++)
+//	 {
+//		 m_szKey[i] = tmpStr[i];
+//	 }
+//	 m_szKey[tmpStr.length()] = '\0';
+// }
 // m_szKey = tmpStr.c_str();
 
  return m_szKey;

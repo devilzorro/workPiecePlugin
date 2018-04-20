@@ -13,7 +13,7 @@
 
 using namespace std;
 
-#define CONFIGLEN           256
+#define CONFIGLEN           1024
 
 enum INI_RES
 {
