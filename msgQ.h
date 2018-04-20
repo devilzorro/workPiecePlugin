@@ -19,5 +19,7 @@ public:
 	string newWorkPList;
 
 	string loginRet;
-
+	string loginStatus;
+	string logoutRet;
+	string logoutStatus;
 };

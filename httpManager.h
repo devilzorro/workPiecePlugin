@@ -26,6 +26,10 @@ public:
 	bool downloadFile(string downloadUrl,string storePath,string strMd5);
 	string GetFileMd5(char *path, int md5_len);
 
+	string loginRequest(string strUrl,string strUserName,string strPassWord,string strMachineId,string logStatus);
+	string woDetailRequest(string strUrl);
+
+
 private:
 	void ByteToHexStr(const unsigned char* source, char* dest, int sourceLen);
 };

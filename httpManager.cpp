@@ -157,6 +157,21 @@ string HTTPManager::GetFileMd5(char *path, int md5_len)
 	return strfile_md5;
 }
 
+string HTTPManager::loginRequest(string strUrl,string strUserName,string strPW,string strMachineId,string logStatus)
+{
+	string strRet = "";
+	string requestContent = strUrl + "memID=" + strUserName + "&memPass=" + strPW
+			+ "&equSerialNo=" + strMachineId + "&loginStatus=" + logStatus;
+	strRet = getStr(requestContent);
+	return strRet;
+}
+
+string HTTPManager::woDetailRequest(string strUrl)
+{
+	string strRet = "";
+	return strRet;
+}
+
 void HTTPManager::ByteToHexStr(const unsigned char* source, char* dest, int sourceLen)
 {
 	short i;

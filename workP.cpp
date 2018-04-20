@@ -18,6 +18,23 @@ FCworkPiece::FCworkPiece()
 //	m_dealer = new RpcDealerZMQ(ip,"7102");
 	m_ini = new CIni();
 	m_httpManager = new HTTPManager();
+	//获取machineId地址
+	string iportPath = m_strEvo + "/config/moon/iport.ini";
+	if(m_ini->OpenFile(iportPath.c_str(),"r") == INI_SUCCESS)
+	{
+		m_machineId = m_ini->GetStr("iPort","MachineId");
+	}
+	m_ini->CloseFile();
+
+	//获取wis服务器地址
+	string wisPath = m_strEvo + "/config/wisservice.ini";
+	if(m_ini->OpenFile(wisPath.c_str(),"r") == INI_SUCCESS)
+	{
+		string tmpPath = m_ini->GetStr("WisTaskLogin","PostUrl");
+		vector<string> vcPath = split(tmpPath,"?");
+		m_wisUrl = vcPath[0] + "?";
+	}
+	m_ini->CloseFile();
 
 	localMQStatus = AccessMQ("FCworkPiece","","",1883,300,localMQConnLost,localMQRecv);
 	if (localMQStatus == 0)
@@ -109,33 +126,8 @@ string FCworkPiece::FCService(string servjson)
 {
 	printf("FCService recv:%s\n",servjson.c_str());
 
-	string iportPath = m_strEvo + "/config/moon/iport.ini";
-	if(m_ini->OpenFile(iportPath.c_str(),"r") == INI_SUCCESS)
-	{
-		m_machineId = m_ini->GetStr("iPort","MachineId");
-	}
-	m_ini->CloseFile();
 	printf("machineId:%s\n",m_machineId.c_str());
-
-	//获取wis服务器地址
-	string wisPath = m_strEvo + "/config/wisservice.ini";
-	printf("wis ini path:%s\n",wisPath.c_str());
-	string iniUrl;
-	string mainKey;
-	if(m_ini->OpenFile(wisPath.c_str(),"r") == INI_SUCCESS)
-	{
-		iniUrl = m_ini->GetStr("WisTaskRfid","PostUrl");
-		mainKey = m_ini->GetStr("WisTaskLogin","MainKey");
-//		vector<string> vcPath = split(tmpPath,"?");
-//		m_wisUrl = vcPath[0] + "?";
-	}
-	m_ini->CloseFile();
-	printf("wis url:%s\n",iniUrl.c_str());
-	printf("mainKey content:%s\n",mainKey.c_str());
-	printf("read ini end\n");
-
-//	printf("machineId:%s\n",m_machineId.c_str());
-//	printf("url:%s\n",m_wisUrl.c_str());
+	printf("url:%s\n",m_wisUrl.c_str());
 
 	string strMd5 = m_httpManager->GetFileMd5("/home/fiyang/nut/config/moon/iport.ini",32);
 	printf("file md5 content:%s\n",strMd5.c_str());
