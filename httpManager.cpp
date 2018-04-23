@@ -67,6 +67,35 @@ string HTTPManager::getStr(string strUrl)
 	return strret;
 }
 
+string HTTPManager::postStr(string strUrl,string strCmd)
+{
+	string strRet = "";
+	CURL* pCurl = curl_easy_init();
+	if (pCurl != NULL)
+	{
+		/* code */
+		curl_easy_setopt(pCurl,CURLOPT_URL,strUrl.c_str());
+		curl_easy_setopt(pCurl,CURLOPT_POSTFIELDS,strCmd.c_str());
+		curl_easy_setopt(pCurl,CURLOPT_WRITEFUNCTION,write_str_call_back);
+		curl_easy_setopt(pCurl,CURLOPT_WRITEDATA,(void*)&strRet);
+		curl_easy_setopt(pCurl,CURLOPT_POST,1);
+		curl_easy_setopt(pCurl,CURLOPT_VERBOSE,1);
+		curl_easy_setopt(pCurl,CURLOPT_HEADER,1);
+		curl_easy_setopt(pCurl,CURLOPT_FOLLOWLOCATION,1);
+		if(curl_easy_perform(pCurl) == CURLE_OK)
+		{
+			curl_easy_cleanup(pCurl);
+			printf("curl post!\n");
+		}
+		else
+		{
+			curl_easy_cleanup(pCurl);
+			printf("curl post fail!\n");
+		}
+	}
+	return strRet;
+}
+
 bool HTTPManager::downloadFile(string downloadUrl,string storePath,string strMd5)
 {
 	CURL* pCurl = curl_easy_init();
@@ -160,9 +189,9 @@ string HTTPManager::GetFileMd5(char *path, int md5_len)
 string HTTPManager::loginRequest(string strUrl,string strUserName,string strPW,string strMachineId,string logStatus)
 {
 	string strRet = "";
-	string requestContent = strUrl + "memID=" + strUserName + "&memPass=" + strPW
+	string requestContent = "memID=" + strUserName + "&memPass=" + strPW
 			+ "&equSerialNo=" + strMachineId + "&loginStatus=" + logStatus;
-	strRet = getStr(requestContent);
+	strRet = postStr(strUrl,requestContent);
 	return strRet;
 }
 

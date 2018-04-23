@@ -32,7 +32,7 @@ FCworkPiece::FCworkPiece()
 	{
 		string tmpPath = m_ini->GetStr("WisTaskLogin","PostUrl");
 		vector<string> vcPath = split(tmpPath,"?");
-		m_wisUrl = vcPath[0] + "?";
+		m_wisUrl = vcPath[0] ;
 	}
 	m_ini->CloseFile();
 
@@ -190,6 +190,7 @@ string FCworkPiece::FCService(string servjson)
 					if((m_wisUrl != "")&&(m_machineId != "")&&(m_msgQ->strUserName != "")&&(m_msgQ->strPw != ""))
 					{
 						m_msgQ->tmpLoginRet = m_httpManager->loginRequest(m_wisUrl,m_msgQ->strUserName,m_msgQ->strPw,m_machineId,"1");
+						printf("login ret content:%s\n",m_msgQ->tmpLoginRet.c_str());
 						replyRoot["woResponse"] = 0;
 					}
 					else
@@ -203,7 +204,7 @@ string FCworkPiece::FCService(string servjson)
 					{
 						//解析获取到的登录信息更新登录状态字段
 						replyRoot["woResponse"] = 1;
-						replyRoot["data"] = m_msgQ->tmpLogoutRet;
+						replyRoot["data"] = m_msgQ->tmpLoginRet;
 					}
 					else
 					{
