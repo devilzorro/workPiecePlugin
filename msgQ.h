@@ -18,8 +18,14 @@ public:
 	string oldWorkPList;
 	string newWorkPList;
 
+	string strUserName;
+	string strPw;
+
+	string tmpLoginRet;
 	string loginRet;
 	string loginStatus;
+
+	string tmpLogoutRet;
 	string logoutRet;
 	string logoutStatus;
 };

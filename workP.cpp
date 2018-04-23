@@ -40,7 +40,7 @@ FCworkPiece::FCworkPiece()
 	if (localMQStatus == 0)
 	{
 		printf("\n connect to localMQ sub topic\n");
-		addSubTopic("WIS");
+		addSubTopic("WISpad");
 	}
 
 
@@ -115,6 +115,13 @@ void FCworkPiece::localMQRecv(char *msgContent,char *topicName,int topicLen)
 		printf("localMQRecv:%s\ntopicName:%s\n",msgContent,topicName);
 		m_workPiece->m_msgQ->recvLocalMQmsg.push_back(msgContent);
 	}
+	else if (strTopic == "WISpad")
+	{
+		if(msgContent != "requestWisList")
+		{
+			m_workPiece->m_msgQ->oldWorkPList = msgContent;
+		}
+	}
 }
 
 void FCworkPiece::localMQConnLost()
@@ -151,46 +158,38 @@ string FCworkPiece::FCService(string servjson)
 				{
 					//发起请求工单列表
 					replyRoot["woResponse"] = 0;
+					sendlocalMQ("requestWisList","WISpad");
 				}
 				else if(strWoRequest == "all_result")
 				{
 					//返回请求工单结果
-					if(m_msgQ->newWorkPList != "")
+					if(m_msgQ->oldWorkPList != "")
 					{
 						replyRoot["woResponse"] = 1;
-						replyRoot["data"] = m_msgQ->newWorkPList;
+						replyRoot["data"] = m_msgQ->oldWorkPList;
 						retStr = replyRoot.toStyledString();
-						printf("localMQ list content:%s\n",m_msgQ->newWorkPList.c_str());
+						printf("localMQ list content:%s\n",m_msgQ->oldWorkPList.c_str());
 					}
 				}
+				//初始化请求
 				else if(strWoRequest == "init")
 				{
-					//初始化请求
-					//获取机床序列号
-					string iportPath = m_strEvo + "/config/moon/iport.ini";
-					printf("iport ini path:%s\n",iportPath.c_str());
-					if(m_ini->OpenFile(iportPath.c_str(),"r") == INI_SUCCESS)
-					{
-						m_machineId = m_ini->GetStr("iPort","MachineId");
-					}
-					m_ini->CloseFile();
-
-
-
 					replyRoot["woResponse"] = 0;
 				}
 				else if(strWoRequest == "init_result")
 				{
 					replyRoot["woResponse"] = 1;
 				}
+				//wis用户登录请求
 				else if(strWoRequest == "login")
 				{
 					Json::Value jsonData = jsonRecv["data"];
-					string strUserName = jsonData["userName"].asString();
-					printf("fc recv login data content:%s\n",strUserName.c_str());
-					string strSendTest = "login test msg: " + strUserName;
-					if(sendlocalMQ(strSendTest.c_str(),"woLogin") != -1)
+					m_msgQ->strUserName = jsonData["userName"].asString();
+					m_msgQ->strPw = jsonData["passWord"].asString();
+					printf("fc recv login data content:%s\n",m_msgQ->strUserName.c_str());
+					if((m_wisUrl != "")&&(m_machineId != "")&&(m_msgQ->strUserName != "")&&(m_msgQ->strPw != ""))
 					{
+						m_msgQ->tmpLoginRet = m_httpManager->loginRequest(m_wisUrl,m_msgQ->strUserName,m_msgQ->strPw,m_machineId,"1");
 						replyRoot["woResponse"] = 0;
 					}
 					else
@@ -200,7 +199,24 @@ string FCworkPiece::FCService(string servjson)
 				}
 				else if(strWoRequest == "login_result")
 				{
-
+					if(m_msgQ->tmpLoginRet != "")
+					{
+						//解析获取到的登录信息更新登录状态字段
+						replyRoot["woResponse"] = 1;
+						replyRoot["data"] = m_msgQ->tmpLogoutRet;
+					}
+					else
+					{
+						replyRoot["woResponse"] = 0;
+					}
+				}
+				//wis用户登出
+				else if(strWoRequest == "logout")
+				{
+//					if()
+				}
+				else if(strWoRequest == "logout_result")
+				{
 				}
 			}
 			else
