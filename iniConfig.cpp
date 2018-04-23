@@ -76,13 +76,14 @@ INI_RES CIni::OpenFile(const char* pathName, const char* type)
   nRightPos = szLine.find("]");
   if(  nLeftPos != string::npos && nRightPos != string::npos )
   {
-   szLine.erase( nLeftPos,1 );
-   nRightPos--;
-   szLine.erase( nRightPos,1 );
+   // szLine.erase( nLeftPos,1 );
+   // nRightPos--;
+   // szLine.erase( nRightPos,1 );
+    nLeftPos++;
    mLastMap.clear();
-   szLastMainKey =  szLine ;
+   szLastMainKey =  szLine.substr(nLeftPos,(nRightPos-nLeftPos)) ;
    m_Map[ szLastMainKey ] = mLastMap;
-//   printf("ini main key:%s\n",szLastMainKey.c_str());
+  // printf("ini main key:%s\n",szLastMainKey.c_str());
   }
   else
   {
@@ -100,8 +101,8 @@ INI_RES CIni::OpenFile(const char* pathName, const char* type)
     	szSubValue = cutEnd(szSubValue," ");
     }
     mLastMap[szSubKey] = szSubValue ;
-//    printf("subkey content:%s***",szSubKey.c_str());
-//    printf("subVal content:%s\n",szSubValue.c_str());
+   // printf("subkey content:%s***",szSubKey.c_str());
+   // printf("subVal content:%s\n",szSubValue.c_str());
     m_Map[ szLastMainKey ] = mLastMap;
    }
    else
@@ -153,9 +154,9 @@ INI_RES CIni::GetKey(const char* mAttr, const char* cAttr, char* pValue)
 // it = mKey.begin();
 // while(it != mKey.end())
 // {
-//	 printf("getKey key:%s\n",it->first.c_str());
-//	 printf("getKey val:%s\n",it->second.c_str());
-//	 it++;
+// 	 printf("getKey key:%s\n",it->first.c_str());
+// 	 printf("getKey val:%s\n",it->second.c_str());
+// 	 it++;
 // }
 
  string sTemp = mKey[cAttr];
