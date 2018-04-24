@@ -41,8 +41,11 @@ public:
 
 	static void * sendLocalMsgThread(void *arg);
 	static void * processLocalMsgThread(void *arg);
+	static void * processHttpMsgThread(void *arg);
+
 	virtual void sendLocalMsgThreadRun();
 	virtual void processLocalMsgThreadRun();
+	virtual void processHttpMsgThreadRun();
 
 	string getEnvPath();
 
@@ -61,6 +64,7 @@ private:
 	static FCworkPiece* m_workPiece;
 	pthread_t sendLocalMQId;
 	pthread_t processLocalMsgId;
+	pthread_t processHttpMsgId;
 };
 
 #endif

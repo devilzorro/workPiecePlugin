@@ -191,6 +191,7 @@ string HTTPManager::loginRequest(string strUrl,string strUserName,string strPW,s
 	string strRet = "";
 	string requestContent = "memID=" + strUserName + "&memPass=" + strPW
 			+ "&equSerialNo=" + strMachineId + "&loginStatus=" + logStatus;
+	printf("post url content:%s,post params:%s\n",strUrl.c_str(),requestContent.c_str());
 	strRet = postStr(strUrl,requestContent);
 	return strRet;
 }

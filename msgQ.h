@@ -14,6 +14,7 @@ public:
 	vector<string> sendLocalMQ;
 	vector<string> recvFCmsg;
 	vector<string> sendFCmsg;
+	vector<string> httpMsgs;
 
 	string oldWorkPList;
 	string newWorkPList;
