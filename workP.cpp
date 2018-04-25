@@ -210,9 +210,6 @@ string FCworkPiece::FCService(string servjson)
 	printf("machineId:%s\n",m_machineId.c_str());
 	printf("url:%s\n",m_wisUrl.c_str());
 
-	string strMd5 = m_httpManager->GetFileMd5("/home/fiyang/nut/config/moon/iport.ini",32);
-	printf("file md5 content:%s\n",strMd5.c_str());
-
 	Json::Reader reader;
 	Json::Value jsonRecv;
 
@@ -335,6 +332,9 @@ string FCworkPiece::FCService(string servjson)
 			replyRoot["woResponse"] = -2;
 		}
 	}
+
+	string strMd5 = m_httpManager->GetFileMd5("/home/fiyang/nut/config/moon/iport.ini",32);
+	printf("file md5 content:%s\n",strMd5.c_str());
 	retStr = replyRoot.toStyledString();
 	return retStr;
 }

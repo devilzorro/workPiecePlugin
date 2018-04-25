@@ -48,7 +48,10 @@ string HTTPManager::getStr(string strUrl)
 		curl_easy_setopt(pCurl,CURLOPT_WRITEFUNCTION,write_str_call_back);
 		curl_easy_setopt(pCurl, CURLOPT_MAXREDIRS, 5);
 		curl_easy_setopt(pCurl, CURLOPT_FOLLOWLOCATION, 1);
+		curl_easy_setopt(pCurl,CURLOPT_CONNECTTIMEOUT,10);
+		curl_easy_setopt(pCurl,CURLOPT_TIMEOUT,10);
 		curl_easy_setopt(pCurl,CURLOPT_URL,strUrl.c_str());
+
 		if(curl_easy_perform(pCurl) == CURLE_OK)
 		{
 			curl_easy_cleanup(pCurl);
@@ -82,6 +85,9 @@ string HTTPManager::postStr(string strUrl,string strCmd)
 		curl_easy_setopt(pCurl,CURLOPT_VERBOSE,1);
 		curl_easy_setopt(pCurl,CURLOPT_HEADER,1);
 		curl_easy_setopt(pCurl,CURLOPT_FOLLOWLOCATION,1);
+		curl_easy_setopt(pCurl,CURLOPT_CONNECTTIMEOUT,10);
+		curl_easy_setopt(pCurl,CURLOPT_TIMEOUT,10);
+
 		if(curl_easy_perform(pCurl) == CURLE_OK)
 		{
 			curl_easy_cleanup(pCurl);
@@ -91,6 +97,7 @@ string HTTPManager::postStr(string strUrl,string strCmd)
 		{
 			curl_easy_cleanup(pCurl);
 			printf("curl post fail!\n");
+			strRet = "";
 		}
 	}
 	return strRet;

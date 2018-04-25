@@ -8,13 +8,11 @@ MsgQ::MsgQ()
 	strUserName = "";
 	strPw = "";
 
-	loginRet = "{\"msg\":\"\",\"data\":[{\"memberName\":\"胖虎\",\"memberNo\":\"222\",\"manualJobID\":1,\"uploadID\":1,\"proDeleteID\":1,\"toProgramID\":1,\"downloadID\":1,\"aotoModeID\":1,\"qualityInfoID\":1,\"position\": \"高工\",\"loginTime\": \"2017-02-01 12:12:38\",\"performance\": \"111\",\"department\": \"集成部\",\"path\": \"111\",\"documentName\": \"111\",\"positionLevel\": \"高级\"}],\"success\":true}";
+	// loginRet = "{\"msg\":\"\",\"data\":[{\"memberName\":\"胖虎\",\"memberNo\":\"222\",\"manualJobID\":1,\"uploadID\":1,\"proDeleteID\":1,\"toProgramID\":1,\"downloadID\":1,\"aotoModeID\":1,\"qualityInfoID\":1,\"position\": \"高工\",\"loginTime\": \"2017-02-01 12:12:38\",\"performance\": \"111\",\"department\": \"集成部\",\"path\": \"111\",\"documentName\": \"111\",\"positionLevel\": \"高级\"}],\"success\":true}";
+	loginRet = "";
 
 	tmpLoginRet = "";
 	loginStatus = "unlogin";
-
-
-
 }
 
 MsgQ::~MsgQ()
