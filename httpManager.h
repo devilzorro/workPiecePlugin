@@ -28,8 +28,8 @@ public:
 	string GetFileMd5(char *path, int md5_len);
 
 	string loginRequest(string strUrl,string strUserName,string strPassWord,string strMachineId,string logStatus);
-	string woDetailRequest(string strUrl);
-
+	string allListRequest(string strUrl,string strMachineId);
+	string woDetailRequest(string strUrl,string strMachineId,string jobNum,string memId);
 
 private:
 	void ByteToHexStr(const unsigned char* source, char* dest, int sourceLen);

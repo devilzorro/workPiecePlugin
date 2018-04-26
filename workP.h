@@ -42,10 +42,12 @@ public:
 	static void * sendLocalMsgThread(void *arg);
 	static void * processLocalMsgThread(void *arg);
 	static void * processHttpMsgThread(void *arg);
+	static void * downloadFilesThread(void *arg);
 
 	virtual void sendLocalMsgThreadRun();
 	virtual void processLocalMsgThreadRun();
 	virtual void processHttpMsgThreadRun();
+	virtual void downloadFilesThreadRun();
 
 	string getEnvPath();
 
@@ -58,6 +60,8 @@ public:
 	bool woStatus;
 	string m_machineId;
 	string m_wisUrl;
+	string m_allListUrl;
+	string m_refreshUrl;
 	string m_strEvo;
 
 private:
@@ -65,6 +69,7 @@ private:
 	pthread_t sendLocalMQId;
 	pthread_t processLocalMsgId;
 	pthread_t processHttpMsgId;
+	pthread_t downloadFilesId;
 };
 
 #endif

@@ -1,6 +1,7 @@
 #include <string>
 #include <string.h>
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -29,4 +30,6 @@ public:
 	string tmpLogoutRet;
 	string logoutRet;
 	string logoutStatus;
+
+	map<string, string> downloadFiles;
 };

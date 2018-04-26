@@ -97,7 +97,7 @@ string HTTPManager::postStr(string strUrl,string strCmd)
 		{
 			curl_easy_cleanup(pCurl);
 			printf("curl post fail!\n");
-			strRet = "";
+			// strRet = "请求失败";
 		}
 	}
 	return strRet;
@@ -203,9 +203,21 @@ string HTTPManager::loginRequest(string strUrl,string strUserName,string strPW,s
 	return strRet;
 }
 
-string HTTPManager::woDetailRequest(string strUrl)
+string HTTPManager::allListRequest(string strUrl,string strMachineId)
 {
 	string strRet = "";
+	string requestContent = "equSerialNo=" + strMachineId;
+	printf("post url content:%s,post params:%s\n",strUrl.c_str(),requestContent.c_str());
+	strRet = postStr(strUrl,requestContent);
+	return strRet;
+}
+
+string HTTPManager::woDetailRequest(string strUrl,string strMachineId,string jobNum,string memId)
+{
+	string strRet = "";
+	string requestContent = "equSerialNo=" + strMachineId + "&jobDispatchNo=" + jobNum + "&memberID=" + memId;
+	printf("post url content:%s,post params:%s\n",strUrl.c_str(),requestContent.c_str());
+	strRet = postStr(strUrl,requestContent);
 	return strRet;
 }
 

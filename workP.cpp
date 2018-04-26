@@ -33,6 +33,14 @@ FCworkPiece::FCworkPiece()
 		string tmpPath = m_ini->GetStr("WisTaskLogin","PostUrl");
 		vector<string> vcPath = split(tmpPath,"?");
 		m_wisUrl = vcPath[0] ;
+		tmpPath = m_ini->GetStr("WisTaskList","PostUrl");
+		vcPath.clear();
+		vcPath = split(tmpPath,"?");
+		m_allListUrl = vcPath[0];
+		tmpPath = m_ini->GetStr("WisWorkArt","PostUrl");
+		vcPath.clear();
+		vcPath = split(tmpPath,"?");
+		m_refreshUrl = vcPath[0];
 	}
 	m_ini->CloseFile();
 
@@ -58,6 +66,11 @@ FCworkPiece::FCworkPiece()
 	{
 		printf("create processHttpMsgThread fail!\n");
 	}
+
+	if (pthread_create(&downloadFilesId,NULL,downloadFilesThread,this) != 0)
+	{
+		printf("create downloadFilesId fail!\n");
+	}
 }
 
 FCworkPiece::~FCworkPiece()
@@ -81,10 +94,17 @@ void* FCworkPiece::processLocalMsgThread(void *arg)
 	pthread_exit(NULL);
 }
 
-void*FCworkPiece::processHttpMsgThread(void *arg)
+void* FCworkPiece::processHttpMsgThread(void *arg)
 {
 	FCworkPiece *ptr = (FCworkPiece *)arg;
 	ptr->processHttpMsgThreadRun();
+	pthread_exit(NULL);
+}
+
+void* FCworkPiece::downloadFilesThread(void *arg)
+{
+	FCworkPiece *ptr = (FCworkPiece *)arg;
+	ptr->downloadFilesThreadRun();
 	pthread_exit(NULL);
 }
 
@@ -142,27 +162,101 @@ void FCworkPiece::processHttpMsgThreadRun()
 						m_msgQ->loginRet = m_httpManager->loginRequest(m_wisUrl,m_msgQ->strUserName,m_msgQ->strPw,m_machineId,"1");
 						if (m_msgQ->loginRet != "")
 						{
-							string tmpData = m_msgQ->loginRet;
-							if (tmpData.substr(0,1) == "[")
+							// string tmpData = m_msgQ->loginRet;
+							// if (tmpData.substr(0,1) == "[")
+							// {
+							// 	tmpData = tmpData.substr(1,tmpData.size()-1);
+							// 	while(tmpData.substr(tmpData.size()-1,1) != "]")
+							// 	{
+							// 		tmpData = tmpData.substr(0,tmpData.size()-1);
+							// 	}
+							// 	tmpData = tmpData.substr(0,tmpData.size()-1);
+							// 	m_msgQ->loginRet = tmpData;
+							// }
+							// printf("cut data ret:%s\n",tmpData.c_str());
+							//解析登陆信息 判断登陆是否成功
+							Json::Reader reader;
+							Json::Value loginRoot;
+							if (reader.parse(m_msgQ->loginRet,loginRoot))
 							{
-								tmpData = tmpData.substr(1,tmpData.size()-1);
-								while(tmpData.substr(tmpData.size()-1,1) != "]")
+								if (loginRoot["success"].asBool())
 								{
-									tmpData = tmpData.substr(0,tmpData.size()-1);
+									m_msgQ->loginStatus = "success";
+									m_msgQ->logoutRet = "";									/* code */
 								}
-								tmpData = tmpData.substr(0,tmpData.size()-1);
-								m_msgQ->loginRet = tmpData;
+								else
+								{
+									m_msgQ->loginStatus = "unlogin";
+								}
 							}
-							printf("cut data ret:%s\n",tmpData.c_str());
+							else
+							{
+								printf("login retdata false!\n");
+							}
+						}
+						else
+						{
+							m_msgQ->loginRet = "请求失败";
 						}
 					}
 					else if (rootVal == "logout")
 					{
 						m_msgQ->logoutRet = m_httpManager->loginRequest(m_wisUrl,m_msgQ->strUserName,m_msgQ->strPw,m_machineId,"0");
+						if (m_msgQ->logoutRet != "")
+						{
+							Json::Reader reader;
+							Json::Value logoutRoot;
+							if (reader.parse(m_msgQ->logoutRet,logoutRoot))
+							{
+								if (logoutRoot["success"].asBool())
+								{
+									m_msgQ->loginStatus = "unlogin";
+									m_msgQ->loginRet = "";
+									m_msgQ->strUserName = "";
+									m_msgQ->strPw = "";
+								}
+								else
+								{
+									m_msgQ->loginStatus = "success";
+								}
+							}
+							else
+							{
+								printf("logout ret data false!\n");
+							}
+						}
+						else
+						{
+							m_msgQ->logoutRet = "请求失败";
+						}
 					}
-					else if (rootVal == "")
+					//刷新工单详情数据
+					else if(rootVal == "refreshData")
+					{
+					}
+					//处理下载文件请求
+					else if (rootVal == "download")
+					{
+						
+					}
+					//手动报工
+					else if (rootVal == "manualReport")
 					{
 						/* code */
+					}
+					else if (rootVal == "all")
+					{
+						/* code */
+						if ((m_allListUrl != "")&&(m_machineId != ""))
+						{
+							/* code */
+							m_msgQ->oldWorkPList = m_httpManager->allListRequest(m_allListUrl,m_machineId);
+							if (m_msgQ->oldWorkPList == "")
+							{
+								/* code */
+								m_msgQ->oldWorkPList = "请求失败";
+							}
+						}
 					}
 					else
 					{
@@ -176,6 +270,14 @@ void FCworkPiece::processHttpMsgThreadRun()
 			}
 
 		}
+		usleep(500000);
+	}
+}
+
+void FCworkPiece::downloadFilesThreadRun()
+{
+	while(woStatus)
+	{
 		usleep(500000);
 	}
 }
@@ -231,23 +333,41 @@ string FCworkPiece::FCService(string servjson)
 				if(strWoRequest == "all")
 				{
 					//发起请求工单列表
-					replyRoot["woResponse"] = 0;
-					sendlocalMQ("requestWisList","WISpad");
-				}
-				else if(strWoRequest == "all_result")
-				{
-					//返回请求工单结果
-					if((m_msgQ->oldWorkPList != "")&&(m_msgQ->oldWorkPList != "requestWisList"))
+					if (m_msgQ->loginStatus == "success")
 					{
-						replyRoot["woResponse"] = 1;
-						replyRoot["data"] = m_msgQ->oldWorkPList;
-						// retStr = replyRoot.toStyledString();
-						// printf("localMQ list content:%s\n",m_msgQ->oldWorkPList.c_str());
+						/* code */
+						replyRoot["woResponse"] = 0;
+						sendlocalMQ("requestWisList","WISpad");
+						m_msgQ->httpMsgs.push_back(servjson);
 					}
 					else
 					{
 						replyRoot["woResponse"] = 0;
 					}
+				}
+				else if(strWoRequest == "all_result")
+				{
+					//返回请求工单结果
+					if(m_msgQ->loginStatus == "success")
+					{
+						if((m_msgQ->oldWorkPList != "")&&(m_msgQ->oldWorkPList != "requestWisList"))
+						{
+							replyRoot["woResponse"] = 1;
+							replyRoot["data"] = m_msgQ->oldWorkPList;
+							// retStr = replyRoot.toStyledString();
+							// printf("localMQ list content:%s\n",m_msgQ->oldWorkPList.c_str());
+						}
+						else
+						{
+							replyRoot["woResponse"] = 0;
+						}
+					}
+					else
+					{
+						replyRoot["woResponse"] = 1;
+						replyRoot["data"] = "wis用户未登录";
+					}
+					
 				}
 				//初始化请求
 				else if(strWoRequest == "init")
@@ -284,7 +404,7 @@ string FCworkPiece::FCService(string servjson)
 						//解析获取到的登录信息更新登录状态字段
 						replyRoot["woResponse"] = 1;
 						replyRoot["data"] = m_msgQ->loginRet;
-						m_msgQ->loginRet = "";
+						// m_msgQ->loginRet = "";
 					}
 					else
 					{
@@ -314,7 +434,7 @@ string FCworkPiece::FCService(string servjson)
 					{
 						replyRoot["woResponse"] = 1;
 						replyRoot["data"] = m_msgQ->logoutRet;
-						m_msgQ->logoutRet = "";
+						// m_msgQ->logoutRet = "";
 					}
 					else
 					{
