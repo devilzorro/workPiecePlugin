@@ -33,6 +33,11 @@ public:
 
 private:
 	void ByteToHexStr(const unsigned char* source, char* dest, int sourceLen);
+
+private:
+	static HTTPManager* m_http;
+	string storeHttpRecv;
+	string recvStatus;
 };
 
 #endif /* HTTPMANAGER_H_ */

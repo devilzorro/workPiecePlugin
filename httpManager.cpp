@@ -10,10 +10,15 @@
 #include <openssl/md5.h>
 #include <string.h>
 #include <algorithm>
+#include <vector>
+
+HTTPManager* HTTPManager::m_http;
 
 HTTPManager::HTTPManager()
 {
-
+	m_http = this;
+	storeHttpRecv = "";
+	recvStatus = "";
 }
 
 HTTPManager::~HTTPManager()
@@ -29,12 +34,32 @@ size_t HTTPManager::write_data(char *buffer,size_t size,size_t nitems,void *outs
 
 size_t HTTPManager::write_str_call_back(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
-    string str;
-    str.append(ptr, size*nmemb);
-    string* p = (string*)userdata;
-    *p = str;
-    printf("curl recv str : %s\n",str.c_str());
-    return size*nmemb;
+	string str;
+	string storeMsgContent;
+	str.append(ptr, size*nmemb);
+	string* p = (string*)userdata;
+	*p = str;
+	printf("curl recv str : %s\n",str.c_str());
+	if (m_http->recvStatus == "start")
+	{
+		/* code */
+		if ((m_http->storeHttpRecv == "")&& (str.substr(0,1) == "{"))
+		{
+		/* code */
+			m_http->storeHttpRecv = str;
+		}
+		else if((m_http->storeHttpRecv != ""))
+		{
+			m_http->storeHttpRecv = m_http->storeHttpRecv + str;
+		}
+	}
+	else if (m_http->recvStatus == "end")
+	{
+		/* code */
+	}
+	
+
+	return size*nmemb;
 }
 
 string HTTPManager::getStr(string strUrl)
@@ -52,13 +77,19 @@ string HTTPManager::getStr(string strUrl)
 		curl_easy_setopt(pCurl,CURLOPT_TIMEOUT,10);
 		curl_easy_setopt(pCurl,CURLOPT_URL,strUrl.c_str());
 
+		recvStatus = "start";
 		if(curl_easy_perform(pCurl) == CURLE_OK)
 		{
+			recvStatus = "end";
+			strret = storeHttpRecv;
+			storeHttpRecv = "";
 			curl_easy_cleanup(pCurl);
 			printf("curl download finish!\n");
 		}
 		else
 		{
+			recvStatus = "end";
+			storeHttpRecv = "";
 			curl_easy_cleanup(pCurl);
 			printf("curl download fail!\n");
 		}
@@ -73,6 +104,7 @@ string HTTPManager::getStr(string strUrl)
 string HTTPManager::postStr(string strUrl,string strCmd)
 {
 	string strRet = "";
+	string storeMsgContent = "";
 	CURL* pCurl = curl_easy_init();
 	if (pCurl != NULL)
 	{
@@ -88,18 +120,44 @@ string HTTPManager::postStr(string strUrl,string strCmd)
 		curl_easy_setopt(pCurl,CURLOPT_CONNECTTIMEOUT,10);
 		curl_easy_setopt(pCurl,CURLOPT_TIMEOUT,10);
 
+		recvStatus = "start";
 		if(curl_easy_perform(pCurl) == CURLE_OK)
 		{
+			recvStatus = "end";
+			strRet = storeHttpRecv;
+			storeHttpRecv = "";
+			printf("http post final recv%s\n",strRet.c_str());
+			// if ((storeMsgContent == "")&& (strRet.substr(0,1) == "{")&&(strRet.substr(strRet.length()-1,1) != "}"))
+			// {
+			// 	/* code */
+			// 	storeMsgContent = strRet;
+			// }
+			// else if((storeMsgContent != "")&&(strRet.substr(0,1) != "{")&&(strRet.substr(strRet.length()-1,1) == "}"))
+			// {
+			// 	storeMsgContent = storeMsgContent + strRet;
+			// }
 			curl_easy_cleanup(pCurl);
 			printf("curl post!\n");
 		}
 		else
 		{
+			recvStatus = "end";
+			storeHttpRecv = "";
 			curl_easy_cleanup(pCurl);
 			printf("curl post fail!\n");
 			// strRet = "请求失败";
 		}
 	}
+
+	if ((storeMsgContent != "")&&(storeMsgContent.substr(storeMsgContent.length()-1,1) == "}"))
+	{
+		return storeMsgContent;
+	}
+	else
+	{
+		return strRet;
+	}
+
 	return strRet;
 }
 
@@ -156,6 +214,7 @@ string HTTPManager::GetFileMd5(char *path, int md5_len)
 	if (fp == NULL)
 	{
 		fprintf(stderr, "fopen %s failed\n", path);
+		fclose(fp);
 		return "";
 	}
 
