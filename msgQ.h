@@ -19,6 +19,8 @@ public:
 
 	string oldWorkPList;
 	string newWorkPList;
+	string testList;
+	string recvIportListCmd;
 
 	string strUserName;
 	string strPw;

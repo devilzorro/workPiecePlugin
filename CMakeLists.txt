@@ -10,6 +10,7 @@ include_directories(
 	/usr/include/
 	${PREFIX}/include/finch-inc
 	${PREFIX}/include/mqtt
+	${PREFIX}/include/kiv
 	${PREFIX}/include
 	${PROJECT_SOURCE_DIR}/json
 )
@@ -35,6 +36,6 @@ endforeach()
 
 
 ADD_LIBRARY(workPiece SHARED ${source_files} )
-TARGET_LINK_LIBRARIES(workPiece localMQ paho-mqtt3as finch pthread curl)
+TARGET_LINK_LIBRARIES(workPiece localMQ paho-mqtt3as finch pthread curl  ${wxWidgets_LIBRARIES})
 #testauthorize
 INSTALL(TARGETS workPiece DESTINATION lib/fc_plugin)

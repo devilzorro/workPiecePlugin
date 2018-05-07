@@ -13,6 +13,7 @@
 #include "msgQ.h"
 #include "iniConfig.h"
 #include "httpManager.h"
+#include "wis/WisDecoder.h"
 
 using namespace std;
 
@@ -38,6 +39,7 @@ public:
 
 	static void localMQRecv(char *msgContent,char *topicName,int topicLen);
 	static void localMQConnLost();
+	static void getWoContent(const int &retStatus,const char *woContent);
 
 	static void * sendLocalMsgThread(void *arg);
 	static void * processLocalMsgThread(void *arg);
@@ -49,13 +51,16 @@ public:
 	virtual void processHttpMsgThreadRun();
 	virtual void downloadFilesThreadRun();
 
+
+
 	string getEnvPath();
 
 public:
-//	RpcDealerZMQ *m_dealer;
+	RpcDealerZMQ *m_dealer;
 	MsgQ *m_msgQ;
 	CIni *m_ini;
 	HTTPManager *m_httpManager;
+	DECODER_PTR1 m_woDecoder;
 	int localMQStatus;
 	bool woStatus;
 	string m_machineId;
@@ -63,6 +68,7 @@ public:
 	string m_allListUrl;
 	string m_refreshUrl;
 	string m_strEvo;
+	string decoderPath;
 
 private:
 	static FCworkPiece* m_workPiece;

@@ -3,6 +3,7 @@
 #include "json.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <dlfcn.h>
 
 #define HOMEPATH "NUTHOME"
 FCworkPiece* FCworkPiece::m_workPiece;
@@ -14,6 +15,24 @@ FCworkPiece::FCworkPiece()
 	const char *ip = "127.0.0.1";
 	m_strEvo = getenv(HOMEPATH);
 //	char *port = "7102";
+	decoderPath = m_strEvo + "/lib/libwisDecoder.so";
+	void *dl = dlopen(decoderPath.c_str(),RTLD_LAZY);
+	m_woDecoder = NULL;
+	if (dl != NULL)
+	{
+		/* code */
+		printf("******************dlopen dl nout NULL\n");
+		m_woDecoder = (DECODER_PTR1) dlsym(dl, "Startlogic");
+		printf("********************test finish\n");
+		if (!m_woDecoder)
+		{
+			/* code */
+			printf("***************dl error code:%s\n",dlerror() );
+			dlclose(dl);
+		}
+	}
+
+
 	m_msgQ = new MsgQ();
 //	m_dealer = new RpcDealerZMQ(ip,"7102");
 	m_ini = new CIni();
@@ -48,8 +67,10 @@ FCworkPiece::FCworkPiece()
 	if (localMQStatus == 0)
 	{
 		printf("\n connect to localMQ sub topic\n");
-		addSubTopic("WISpad");
+		addSubTopic("WIS");
 	}
+
+	//
 
 
 	if(pthread_create(&sendLocalMQId,NULL,sendLocalMsgThread,this) != 0)
@@ -71,6 +92,8 @@ FCworkPiece::FCworkPiece()
 	{
 		printf("create downloadFilesId fail!\n");
 	}
+
+	printf("*****************construct finish!\n");
 }
 
 FCworkPiece::~FCworkPiece()
@@ -201,6 +224,10 @@ void FCworkPiece::processHttpMsgThreadRun()
 					}
 					else if (rootVal == "logout")
 					{
+						if (m_msgQ->loginStatus == "success")
+						{
+							/* code */
+						}
 						m_msgQ->logoutRet = m_httpManager->loginRequest(m_wisUrl,m_msgQ->strUserName,m_msgQ->strPw,m_machineId,"0");
 						if (m_msgQ->logoutRet != "")
 						{
@@ -208,16 +235,21 @@ void FCworkPiece::processHttpMsgThreadRun()
 							Json::Value logoutRoot;
 							if (reader.parse(m_msgQ->logoutRet,logoutRoot))
 							{
-								if (logoutRoot["success"].asBool())
+								if (logoutRoot["success"].asBool() == true)
 								{
 									m_msgQ->loginStatus = "unlogin";
 									m_msgQ->loginRet = "";
 									m_msgQ->strUserName = "";
 									m_msgQ->strPw = "";
 								}
+								else if (logoutRoot["success"].asBool() == false)
+								{
+									/* code */
+									m_msgQ->loginStatus = "success";
+								}
 								else
 								{
-									m_msgQ->loginStatus = "success";
+									m_msgQ->loginStatus = "";
 								}
 							}
 							else
@@ -247,16 +279,16 @@ void FCworkPiece::processHttpMsgThreadRun()
 					else if (rootVal == "all")
 					{
 						/* code */
-						if ((m_allListUrl != "")&&(m_machineId != ""))
-						{
-							/* code */
-							m_msgQ->oldWorkPList = m_httpManager->allListRequest(m_allListUrl,m_machineId);
-							if (m_msgQ->oldWorkPList == "")
-							{
-								/* code */
-								m_msgQ->oldWorkPList = "请求失败";
-							}
-						}
+						// if ((m_allListUrl != "")&&(m_machineId != ""))
+						// {
+						// 	/* code */
+						// 	m_msgQ->oldWorkPList = m_httpManager->allListRequest(m_allListUrl,m_machineId);
+						// 	if (m_msgQ->oldWorkPList == "")
+						// 	{
+						// 		/* code */
+						// 		m_msgQ->oldWorkPList = "请求失败";
+						// 	}
+						// }
 					}
 					else
 					{
@@ -286,10 +318,11 @@ void FCworkPiece::localMQRecv(char *msgContent,char *topicName,int topicLen)
 {
 	string strMsg = msgContent;
 	string strTopic = topicName;
+	printf("localMQRecv:%s\ntopicName:%s\n",msgContent,topicName);
 	if(strTopic == "WIS")
 	{
-		printf("localMQRecv:%s\ntopicName:%s\n",msgContent,topicName);
-		m_workPiece->m_msgQ->recvLocalMQmsg.push_back(msgContent);
+		m_workPiece->m_msgQ->recvIportListCmd = msgContent;
+		// m_workPiece->m_msgQ->recvLocalMQmsg.push_back(msgContent);
 	}
 	else if (strTopic == "WISpad")
 	{
@@ -305,9 +338,29 @@ void FCworkPiece::localMQConnLost()
 
 }
 
+void FCworkPiece::getWoContent(const int &retStatus,const char *woContent)
+{
+	if (retStatus == 0)
+	{
+		printf("***************get wo content:%s\n",woContent );
+		m_workPiece->m_msgQ->newWorkPList = woContent;
+	}
+	else
+	{
+		printf("error status:%d errror content%s\n",retStatus,woContent );
+	}
+}
+
 string FCworkPiece::FCService(string servjson)
 {
 	printf("FCService recv:%s\n",servjson.c_str());
+
+	// if (m_woDecoder != NULL)
+	// {
+	// 	/* code */
+	// 	printf("***************test m_woDecoder\n");
+		
+	// }
 
 	printf("machineId:%s\n",m_machineId.c_str());
 	printf("url:%s\n",m_wisUrl.c_str());
@@ -337,8 +390,18 @@ string FCworkPiece::FCService(string servjson)
 					{
 						/* code */
 						replyRoot["woResponse"] = 0;
-						sendlocalMQ("requestWisList","WISpad");
-						m_msgQ->httpMsgs.push_back(servjson);
+						// sendlocalMQ("requestWisList","WISpad");
+						// m_msgQ->httpMsgs.push_back(servjson);
+						if (m_workPiece->m_msgQ->recvIportListCmd != "")
+						{
+							/* code */
+							if (m_woDecoder != NULL)
+							{
+								/* code */
+								char *testData = "{\"FCode\": \"10012\",\"URL\": \"http://10.10.60.117:8080/download/78d1850f81684c108a59216521df51f1.txt\",\"MD5\": \"e27d8e0e391c5c465b7c7f557e3969a8\"}";
+								(*m_woDecoder)(testData,&getWoContent);
+							}
+						}
 					}
 					else
 					{
@@ -350,10 +413,10 @@ string FCworkPiece::FCService(string servjson)
 					//返回请求工单结果
 					if(m_msgQ->loginStatus == "success")
 					{
-						if((m_msgQ->oldWorkPList != "")&&(m_msgQ->oldWorkPList != "requestWisList"))
+						if(m_msgQ->newWorkPList != "")
 						{
 							replyRoot["woResponse"] = 1;
-							replyRoot["data"] = m_msgQ->oldWorkPList;
+							replyRoot["data"] = m_msgQ->testList;
 							// retStr = replyRoot.toStyledString();
 							// printf("localMQ list content:%s\n",m_msgQ->oldWorkPList.c_str());
 						}
@@ -415,10 +478,10 @@ string FCworkPiece::FCService(string servjson)
 				else if(strWoRequest == "logout")
 				{
 					m_msgQ->httpMsgs.push_back(servjson);
-					Json::Value jsonData = jsonRecv["data"];
-					m_msgQ->strUserName = jsonData["userName"].asString();
-					m_msgQ->strPw = jsonData["passWord"].asString();
-					printf("fc recv logout data content:%s\n",m_msgQ->strUserName.c_str());
+					// Json::Value jsonData = jsonRecv["data"];
+					// m_msgQ->strUserName = jsonData["userName"].asString();
+					// m_msgQ->strPw = jsonData["passWord"].asString();
+					// printf("fc recv logout data content:%s\n",m_msgQ->strUserName.c_str());
 					if((m_wisUrl != "")&&(m_machineId != "")&&(m_msgQ->strUserName != "")&&(m_msgQ->strPw != ""))
 					{
 						replyRoot["woResponse"] = 0;
