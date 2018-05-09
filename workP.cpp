@@ -263,21 +263,21 @@ void FCworkPiece::processHttpMsgThreadRun()
 						}
 					}
 					//刷新工单详情数据
-					else if(rootVal == "refreshData")
-					{
-					}
+					// else if(rootVal == "refreshData")
+					// {
+					// }
 					//处理下载文件请求
-					else if (rootVal == "download")
-					{
+					// else if (rootVal == "download")
+					// {
 						
-					}
+					// }
 					//手动报工
-					else if (rootVal == "manualReport")
-					{
-						/* code */
-					}
-					else if (rootVal == "all")
-					{
+					// else if (rootVal == "manualReport")
+					// {
+					// 	/* code */
+					// }
+					// else if (rootVal == "all")
+					// {
 						/* code */
 						// if ((m_allListUrl != "")&&(m_machineId != ""))
 						// {
@@ -289,7 +289,7 @@ void FCworkPiece::processHttpMsgThreadRun()
 						// 		m_msgQ->oldWorkPList = "请求失败";
 						// 	}
 						// }
-					}
+					// }
 					else
 					{
 
@@ -310,6 +310,74 @@ void FCworkPiece::downloadFilesThreadRun()
 {
 	while(woStatus)
 	{
+		if (!m_msgQ->downloadCmds.empty())
+		{
+			vector<string>::iterator it;
+			it = m_msgQ->downloadCmds.begin();
+			string downloadCmd = *it;
+			m_msgQ->downloadCmds.erase(m_msgQ->downloadCmds.begin());
+			if (downloadCmd != "")
+			{
+				/* code */
+				m_msgQ->downloadStatus = "start";
+
+				Json::Reader reader;
+				Json::Value valueRoot;
+				Json::Value arrayVal;
+				if (reader.parse(downloadCmd,valueRoot))
+				{
+					/* code */
+					arrayVal = valueRoot["data"]["downloadList"];
+					printf("***************array size num:%d\n",arrayVal.size() );
+					if (arrayVal.size() >= 1)
+					{
+						/* code */
+						for (int i = 0; i < arrayVal.size(); ++i)
+						{
+							/* code */
+							Json::Value arrayObj = arrayVal[i];
+							string fileName = arrayObj["fileName"].asString();
+							string downloadUrl = arrayObj["url"].asString();
+							string md5 = arrayObj["md5"].asString();
+							string tmpPath = m_strEvo.substr(0,m_strEvo.size()-3);
+							string storePath = tmpPath + "program/" + fileName;
+							printf("file store path:%s\n", storePath.c_str());
+							printf("download url : %s\n",downloadUrl.c_str());
+							//downloadFile方法目前未添加md5校验,暂不检测方法返回值
+							bool downloadRet = m_httpManager->getDownloadFile(downloadUrl,storePath);
+							if (downloadRet)
+							{
+								/* code */
+								string fileMd5 = m_httpManager->GetFileMd5(storePath.c_str(),32);
+								if (fileMd5 != md5)
+								{
+									/* code */
+									m_msgQ->downloadStatus = fileName + "下载文件失败";
+									break;
+								}
+							}
+							else
+							{
+								m_msgQ->downloadStatus = fileName + "下载文件失败";
+								break;
+							}
+						}
+						m_msgQ->downloadStatus = "end";
+					}
+				}
+				else
+				{
+					printf("downloadCmd json type false!\n");
+				}
+			}
+			else
+			{
+			}
+		}
+		else
+		{
+			m_msgQ->downloadStatus = "end";
+		}
 		usleep(500000);
 	}
 }
@@ -386,49 +454,52 @@ string FCworkPiece::FCService(string servjson)
 				if(strWoRequest == "all")
 				{
 					//发起请求工单列表
-					if (m_msgQ->loginStatus == "success")
-					{
-						/* code */
-						replyRoot["woResponse"] = 0;
+					// if (m_msgQ->loginStatus == "success")
+					// {
+					// 	/* code */
+						
+					// }
+					// else
+					// {
+					// 	replyRoot["woResponse"] = 0;
+					// }
+					replyRoot["woResponse"] = 0;
 						// sendlocalMQ("requestWisList","WISpad");
 						// m_msgQ->httpMsgs.push_back(servjson);
-						if (m_workPiece->m_msgQ->recvIportListCmd != "")
+					printf("recv recvIportListCmd content:%s\n", m_msgQ->recvIportListCmd.c_str());
+					// if (m_msgQ->recvIportListCmd != "")
+					// {
+						/* code */
+						if (m_woDecoder != NULL)
 						{
 							/* code */
-							if (m_woDecoder != NULL)
-							{
-								/* code */
-								char *testData = "{\"FCode\": \"10012\",\"URL\": \"http://10.10.60.117:8080/download/78d1850f81684c108a59216521df51f1.txt\",\"MD5\": \"e27d8e0e391c5c465b7c7f557e3969a8\"}";
-								(*m_woDecoder)(testData,&getWoContent);
-							}
+							char *testData = "{\"FCode\": \"10012\",\"URL\": \"http://10.10.60.117:8080/download/78d1850f81684c108a59216521df51f1.txt\",\"MD5\": \"e27d8e0e391c5c465b7c7f557e3969a8\"}";
+							(*m_woDecoder)(testData,&getWoContent);
 						}
-					}
-					else
-					{
-						replyRoot["woResponse"] = 0;
-					}
+					// }
 				}
 				else if(strWoRequest == "all_result")
 				{
 					//返回请求工单结果
-					if(m_msgQ->loginStatus == "success")
+					// if(m_msgQ->loginStatus == "success")
+					// {
+						
+					// }
+					// else
+					// {
+					// 	replyRoot["woResponse"] = 1;
+					// 	replyRoot["data"] = "wis用户未登录";
+					// }
+					if(m_msgQ->newWorkPList != "")
 					{
-						if(m_msgQ->newWorkPList != "")
-						{
-							replyRoot["woResponse"] = 1;
-							replyRoot["data"] = m_msgQ->testList;
-							// retStr = replyRoot.toStyledString();
-							// printf("localMQ list content:%s\n",m_msgQ->oldWorkPList.c_str());
-						}
-						else
-						{
-							replyRoot["woResponse"] = 0;
-						}
+						replyRoot["woResponse"] = 1;
+						replyRoot["data"] = m_msgQ->testList;
+						// retStr = replyRoot.toStyledString();
+						// printf("localMQ list content:%s\n",m_msgQ->oldWorkPList.c_str());
 					}
 					else
 					{
-						replyRoot["woResponse"] = 1;
-						replyRoot["data"] = "wis用户未登录";
+						replyRoot["woResponse"] = 0;
 					}
 					
 				}
@@ -440,6 +511,31 @@ string FCworkPiece::FCService(string servjson)
 				else if(strWoRequest == "init_result")
 				{
 					replyRoot["woResponse"] = 1;
+				}
+				//下载文件请求
+				else if(strWoRequest == "download")
+				{
+					replyRoot["woResponse"] = 0;
+					m_msgQ->downloadCmds.push_back(servjson);
+				}
+				else if (strWoRequest == "download_result")
+				{
+					/* code */
+					if (m_msgQ->downloadStatus == "end")
+					{
+						/* code */
+						replyRoot["woResponse"] = 1;
+					}
+					else if ((m_msgQ->downloadStatus != "end")&&(m_msgQ->downloadStatus != "start")&&(m_msgQ->downloadStatus != ""))
+					{
+						/* code */
+						replyRoot["woResponse"] = -1;
+						replyRoot["data"] = m_msgQ->downloadStatus;
+					}
+					else
+					{
+						replyRoot["woResponse"] = 0;
+					}
 				}
 				//wis用户登录请求
 				else if(strWoRequest == "login")

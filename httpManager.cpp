@@ -161,7 +161,7 @@ string HTTPManager::postStr(string strUrl,string strCmd)
 	return strRet;
 }
 
-bool HTTPManager::downloadFile(string downloadUrl,string storePath,string strMd5)
+bool HTTPManager::getDownloadFile(string downloadUrl,string storePath)
 {
 	CURL* pCurl = curl_easy_init();
 	if(pCurl != NULL)
@@ -195,7 +195,45 @@ bool HTTPManager::downloadFile(string downloadUrl,string storePath,string strMd5
 	return true;
 }
 
-string HTTPManager::GetFileMd5(char *path, int md5_len)
+bool HTTPManager::postDownloadFile(string downloadUrl,string storePath)
+{
+	CURL* pCurl = curl_easy_init();
+	if(pCurl != NULL)
+	{
+		FILE *pfile = fopen(storePath.c_str(),"wb");
+		curl_easy_setopt(pCurl,CURLOPT_WRITEDATA,(void*)pfile);
+		curl_easy_setopt(pCurl,CURLOPT_WRITEFUNCTION,write_data);
+		curl_easy_setopt(pCurl,CURLOPT_URL,downloadUrl.c_str());
+		curl_easy_setopt(pCurl,CURLOPT_POST,1);
+		curl_easy_setopt(pCurl,CURLOPT_VERBOSE,1);
+		curl_easy_setopt(pCurl,CURLOPT_HEADER,1);
+		curl_easy_setopt(pCurl,CURLOPT_FOLLOWLOCATION,1);
+		curl_easy_setopt(pCurl,CURLOPT_CONNECTTIMEOUT,10);
+		curl_easy_setopt(pCurl,CURLOPT_TIMEOUT,10);
+
+		if(curl_easy_perform(pCurl) == CURLE_OK)
+		{
+			fclose(pfile);
+			curl_easy_cleanup(pCurl);
+			printf("curl download finish!\n");
+		}
+		else
+		{
+			fclose(pfile);
+			curl_easy_cleanup(pCurl);
+			printf("curl download fail!\n");
+			return false;
+		}
+	}
+	else
+	{
+		printf("curl init fail!\n");
+		return false;
+	}
+	return true;
+}
+
+string HTTPManager::GetFileMd5(const char *path, int md5_len)
 {
 	FILE *fp;
 	#ifdef WIN32

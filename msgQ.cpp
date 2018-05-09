@@ -15,6 +15,7 @@ MsgQ::MsgQ()
 
 	tmpLoginRet = "";
 	loginStatus = "unlogin";
+	downloadStatus = "";
 }
 
 MsgQ::~MsgQ()

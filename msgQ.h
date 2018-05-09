@@ -16,6 +16,7 @@ public:
 	vector<string> recvFCmsg;
 	vector<string> sendFCmsg;
 	vector<string> httpMsgs;
+	vector<string> downloadCmds;
 
 	string oldWorkPList;
 	string newWorkPList;
@@ -32,6 +33,8 @@ public:
 	string tmpLogoutRet;
 	string logoutRet;
 	string logoutStatus;
+
+	string downloadStatus;
 
 	map<string, string> downloadFiles;
 };

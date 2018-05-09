@@ -24,8 +24,9 @@ public:
 
 	string getStr(string strUrl);
 	string postStr(string strUrl,string cmd);
-	bool downloadFile(string downloadUrl,string storePath,string strMd5);
-	string GetFileMd5(char *path, int md5_len);
+	bool getDownloadFile(string downloadUrl,string storePath);
+	bool postDownloadFile(string downloadUrl,string storePath);
+	string GetFileMd5(const char *path, int md5_len);
 
 	string loginRequest(string strUrl,string strUserName,string strPassWord,string strMachineId,string logStatus);
 	string allListRequest(string strUrl,string strMachineId);
