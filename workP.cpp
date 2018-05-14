@@ -328,7 +328,6 @@ void FCworkPiece::downloadFilesThreadRun()
 				{
 					/* code */
 					arrayVal = valueRoot["data"]["downloadList"];
-					printf("***************array size num:%d\n",arrayVal.size() );
 					if (arrayVal.size() >= 1)
 					{
 						/* code */
@@ -341,8 +340,8 @@ void FCworkPiece::downloadFilesThreadRun()
 							string md5 = arrayObj["md5"].asString();
 							string tmpPath = m_strEvo.substr(0,m_strEvo.size()-3);
 							string storePath = tmpPath + "program/" + fileName;
-							printf("file store path:%s\n", storePath.c_str());
-							printf("download url : %s\n",downloadUrl.c_str());
+							// printf("file store path:%s\n", storePath.c_str());
+							// printf("download url : %s\n",downloadUrl.c_str());
 							//downloadFile方法目前未添加md5校验,暂不检测方法返回值
 							bool downloadRet = m_httpManager->getDownloadFile(downloadUrl,storePath);
 							if (downloadRet)
@@ -352,17 +351,24 @@ void FCworkPiece::downloadFilesThreadRun()
 								if (fileMd5 != md5)
 								{
 									/* code */
-									m_msgQ->downloadStatus = fileName + "下载文件失败";
+									m_msgQ->downloadStatus = fileName + "下载失败";
+									printf("download file error msg:%s\n",m_msgQ->downloadStatus.c_str());
 									break;
 								}
 							}
 							else
 							{
-								m_msgQ->downloadStatus = fileName + "下载文件失败";
+								m_msgQ->downloadStatus = fileName + "下载失败";
 								break;
 							}
+							if (i == arrayVal.size()-1)
+							{
+								/* code */
+								printf("*************give downloadStatus end!\n");
+								m_msgQ->downloadStatus = "end";
+							}
 						}
-						m_msgQ->downloadStatus = "end";
+						
 					}
 				}
 				else
@@ -376,7 +382,7 @@ void FCworkPiece::downloadFilesThreadRun()
 		}
 		else
 		{
-			m_msgQ->downloadStatus = "end";
+			// m_msgQ->downloadStatus = "end";
 		}
 		usleep(500000);
 	}
