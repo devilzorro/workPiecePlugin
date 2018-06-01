@@ -17,6 +17,7 @@ public:
 	vector<string> sendFCmsg;
 	vector<string> httpMsgs;
 	vector<string> downloadCmds;
+	vector<string> manualReportList;
 
 	string oldWorkPList;
 	string newWorkPList;
@@ -35,6 +36,9 @@ public:
 	string logoutStatus;
 
 	string downloadStatus;
+
+	string workPDetailResult;
+	string workPDetailRequest;
 
 	map<string, string> downloadFiles;
 };

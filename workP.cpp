@@ -135,10 +135,24 @@ void FCworkPiece::sendLocalMsgThreadRun()
 {
 	while(woStatus)
 	{
-		if(!m_msgQ->recvFCmsg.empty())
+		if (!m_msgQ->manualReportList.empty())
 		{
-
+			/* code */
+			vector<string>::iterator it;
+			it = m_msgQ->manualReportList.begin();
+			string tmpRemoteMsg = *it;
+			m_msgQ->manualReportList.erase(m_msgQ->manualReportList.begin());
+			if (localMQStatus == 0)
+			{
+				/* code */
+				sendRemoteMsg(tmpRemoteMsg.c_str(),"WIS",103);
+			}
+			
 		}
+		// if(!m_msgQ->recvFCmsg.empty())
+		// {
+
+		// }
 //		printf("sendLocalMsgThread\n");
 		usleep(500000);
 	}
@@ -165,143 +179,151 @@ void FCworkPiece::processHttpMsgThreadRun()
 {
 	while(woStatus)
 	{
-		if (!m_msgQ->httpMsgs.empty())
+		if (m_msgQ->workPDetailRequest != "")
 		{
-			vector<string>::iterator it;
-			it = m_msgQ->httpMsgs.begin();
-			string recvMsgContent = *it;
-			m_msgQ->httpMsgs.erase(m_msgQ->httpMsgs.begin());
-			if (recvMsgContent != "")
-			{
-				printf("process http msg content:%s\n",recvMsgContent.c_str());
-				Json::Reader reader;
-				Json::Value jsonRoot;
-				Json::Value jsonVal;
-				if (reader.parse(recvMsgContent,jsonRoot))
-				{
-					string rootVal = jsonRoot["woRequest"].asString();
-					if (rootVal == "login")
-					{
-						m_msgQ->loginRet = m_httpManager->loginRequest(m_wisUrl,m_msgQ->strUserName,m_msgQ->strPw,m_machineId,"1");
-						if (m_msgQ->loginRet != "")
-						{
-							// string tmpData = m_msgQ->loginRet;
-							// if (tmpData.substr(0,1) == "[")
-							// {
-							// 	tmpData = tmpData.substr(1,tmpData.size()-1);
-							// 	while(tmpData.substr(tmpData.size()-1,1) != "]")
-							// 	{
-							// 		tmpData = tmpData.substr(0,tmpData.size()-1);
-							// 	}
-							// 	tmpData = tmpData.substr(0,tmpData.size()-1);
-							// 	m_msgQ->loginRet = tmpData;
-							// }
-							// printf("cut data ret:%s\n",tmpData.c_str());
-							//解析登陆信息 判断登陆是否成功
-							Json::Reader reader;
-							Json::Value loginRoot;
-							if (reader.parse(m_msgQ->loginRet,loginRoot))
-							{
-								if (loginRoot["success"].asBool())
-								{
-									m_msgQ->loginStatus = "success";
-									m_msgQ->logoutRet = "";									/* code */
-								}
-								else
-								{
-									m_msgQ->loginStatus = "unlogin";
-								}
-							}
-							else
-							{
-								printf("login retdata false!\n");
-							}
-						}
-						else
-						{
-							m_msgQ->loginRet = "请求失败";
-						}
-					}
-					else if (rootVal == "logout")
-					{
-						if (m_msgQ->loginStatus == "success")
-						{
-							/* code */
-						}
-						m_msgQ->logoutRet = m_httpManager->loginRequest(m_wisUrl,m_msgQ->strUserName,m_msgQ->strPw,m_machineId,"0");
-						if (m_msgQ->logoutRet != "")
-						{
-							Json::Reader reader;
-							Json::Value logoutRoot;
-							if (reader.parse(m_msgQ->logoutRet,logoutRoot))
-							{
-								if (logoutRoot["success"].asBool() == true)
-								{
-									m_msgQ->loginStatus = "unlogin";
-									m_msgQ->loginRet = "";
-									m_msgQ->strUserName = "";
-									m_msgQ->strPw = "";
-								}
-								else if (logoutRoot["success"].asBool() == false)
-								{
-									/* code */
-									m_msgQ->loginStatus = "success";
-								}
-								else
-								{
-									m_msgQ->loginStatus = "";
-								}
-							}
-							else
-							{
-								printf("logout ret data false!\n");
-							}
-						}
-						else
-						{
-							m_msgQ->logoutRet = "请求失败";
-						}
-					}
-					//刷新工单详情数据
-					// else if(rootVal == "refreshData")
-					// {
-					// }
-					//处理下载文件请求
-					// else if (rootVal == "download")
-					// {
-						
-					// }
-					//手动报工
-					// else if (rootVal == "manualReport")
-					// {
-					// 	/* code */
-					// }
-					// else if (rootVal == "all")
-					// {
-						/* code */
-						// if ((m_allListUrl != "")&&(m_machineId != ""))
-						// {
-						// 	/* code */
-						// 	m_msgQ->oldWorkPList = m_httpManager->allListRequest(m_allListUrl,m_machineId);
-						// 	if (m_msgQ->oldWorkPList == "")
-						// 	{
-						// 		/* code */
-						// 		m_msgQ->oldWorkPList = "请求失败";
-						// 	}
-						// }
-					// }
-					else
-					{
+			/* code */
+			string tmpRequest = "equSerialNo=" + m_machineId + "&jobDispatchNo" + m_msgQ->workPDetailRequest + "&memberID=1";
+			m_msgQ->workPDetailResult =  m_httpManager->postStr(m_allListUrl,tmpRequest);
 
-					}
-				}
-				else
-				{
-					printf("http msg type error!\n" );
-				}
-			}
-
+			m_msgQ->workPDetailRequest = "";
 		}
+		// if (!m_msgQ->httpMsgs.empty())
+		// {
+		// 	vector<string>::iterator it;
+		// 	it = m_msgQ->httpMsgs.begin();
+		// 	string recvMsgContent = *it;
+		// 	m_msgQ->httpMsgs.erase(m_msgQ->httpMsgs.begin());
+		// 	if (recvMsgContent != "")
+		// 	{
+		// 		printf("process http msg content:%s\n",recvMsgContent.c_str());
+		// 		Json::Reader reader;
+		// 		Json::Value jsonRoot;
+		// 		Json::Value jsonVal;
+		// 		if (reader.parse(recvMsgContent,jsonRoot))
+		// 		{
+		// 			string rootVal = jsonRoot["woRequest"].asString();
+		// 			if (rootVal == "login")
+		// 			{
+		// 				m_msgQ->loginRet = m_httpManager->loginRequest(m_wisUrl,m_msgQ->strUserName,m_msgQ->strPw,m_machineId,"1");
+		// 				if (m_msgQ->loginRet != "")
+		// 				{
+		// 					// string tmpData = m_msgQ->loginRet;
+		// 					// if (tmpData.substr(0,1) == "[")
+		// 					// {
+		// 					// 	tmpData = tmpData.substr(1,tmpData.size()-1);
+		// 					// 	while(tmpData.substr(tmpData.size()-1,1) != "]")
+		// 					// 	{
+		// 					// 		tmpData = tmpData.substr(0,tmpData.size()-1);
+		// 					// 	}
+		// 					// 	tmpData = tmpData.substr(0,tmpData.size()-1);
+		// 					// 	m_msgQ->loginRet = tmpData;
+		// 					// }
+		// 					// printf("cut data ret:%s\n",tmpData.c_str());
+		// 					//解析登陆信息 判断登陆是否成功
+		// 					Json::Reader reader;
+		// 					Json::Value loginRoot;
+		// 					if (reader.parse(m_msgQ->loginRet,loginRoot))
+		// 					{
+		// 						if (loginRoot["success"].asBool())
+		// 						{
+		// 							m_msgQ->loginStatus = "success";
+		// 							m_msgQ->logoutRet = "";									/* code */
+		// 						}
+		// 						else
+		// 						{
+		// 							m_msgQ->loginStatus = "unlogin";
+		// 						}
+		// 					}
+		// 					else
+		// 					{
+		// 						printf("login retdata false!\n");
+		// 					}
+		// 				}
+		// 				else
+		// 				{
+		// 					m_msgQ->loginRet = "请求失败";
+		// 				}
+		// 			}
+		// 			else if (rootVal == "logout")
+		// 			{
+		// 				if (m_msgQ->loginStatus == "success")
+		// 				{
+		// 					/* code */
+		// 				}
+		// 				m_msgQ->logoutRet = m_httpManager->loginRequest(m_wisUrl,m_msgQ->strUserName,m_msgQ->strPw,m_machineId,"0");
+		// 				if (m_msgQ->logoutRet != "")
+		// 				{
+		// 					Json::Reader reader;
+		// 					Json::Value logoutRoot;
+		// 					if (reader.parse(m_msgQ->logoutRet,logoutRoot))
+		// 					{
+		// 						if (logoutRoot["success"].asBool() == true)
+		// 						{
+		// 							m_msgQ->loginStatus = "unlogin";
+		// 							m_msgQ->loginRet = "";
+		// 							m_msgQ->strUserName = "";
+		// 							m_msgQ->strPw = "";
+		// 						}
+		// 						else if (logoutRoot["success"].asBool() == false)
+		// 						{
+		// 							/* code */
+		// 							m_msgQ->loginStatus = "success";
+		// 						}
+		// 						else
+		// 						{
+		// 							m_msgQ->loginStatus = "";
+		// 						}
+		// 					}
+		// 					else
+		// 					{
+		// 						printf("logout ret data false!\n");
+		// 					}
+		// 				}
+		// 				else
+		// 				{
+		// 					m_msgQ->logoutRet = "请求失败";
+		// 				}
+		// 			}
+		// 			//刷新工单详情数据
+		// 			// else if(rootVal == "refreshData")
+		// 			// {
+		// 			// }
+		// 			//处理下载文件请求
+		// 			// else if (rootVal == "download")
+		// 			// {
+						
+		// 			// }
+		// 			//手动报工
+		// 			// else if (rootVal == "manualReport")
+		// 			// {
+		// 			// 	/* code */
+		// 			// }
+		// 			// else if (rootVal == "all")
+		// 			// {
+		// 				/* code */
+		// 				// if ((m_allListUrl != "")&&(m_machineId != ""))
+		// 				// {
+		// 				// 	/* code */
+		// 				// 	m_msgQ->oldWorkPList = m_httpManager->allListRequest(m_allListUrl,m_machineId);
+		// 				// 	if (m_msgQ->oldWorkPList == "")
+		// 				// 	{
+		// 				// 		/* code */
+		// 				// 		m_msgQ->oldWorkPList = "请求失败";
+		// 				// 	}
+		// 				// }
+		// 			// }
+		// 			else
+		// 			{
+
+		// 			}
+		// 		}
+		// 		else
+		// 		{
+		// 			printf("http msg type error!\n" );
+		// 		}
+		// 	}
+
+		// }
 		usleep(500000);
 	}
 }
@@ -479,8 +501,14 @@ string FCworkPiece::FCService(string servjson)
 						if (m_woDecoder != NULL)
 						{
 							/* code */
-							char *testData = "{\"FCode\": \"10012\",\"URL\": \"http://10.10.60.117:8080/download/78d1850f81684c108a59216521df51f1.txt\",\"MD5\": \"e27d8e0e391c5c465b7c7f557e3969a8\"}";
-							(*m_woDecoder)(testData,&getWoContent);
+							// char *testData = "{\"FCode\": \"10012\",\"URL\": \"http://10.10.60.117:8080/download/78d1850f81684c108a59216521df51f1.txt\",\"MD5\": \"e27d8e0e391c5c465b7c7f557e3969a8\"}";
+							if (m_msgQ->recvIportListCmd != "")
+							{
+								/* code */
+								char* listCmd = (char *)m_msgQ->recvIportListCmd.c_str();
+								(*m_woDecoder)(listCmd,&getWoContent);
+							}
+							
 						}
 					// }
 				}
@@ -499,7 +527,7 @@ string FCworkPiece::FCService(string servjson)
 					if(m_msgQ->newWorkPList != "")
 					{
 						replyRoot["woResponse"] = 1;
-						replyRoot["data"] = m_msgQ->testList;
+						replyRoot["data"] = m_msgQ->newWorkPList;
 						// retStr = replyRoot.toStyledString();
 						// printf("localMQ list content:%s\n",m_msgQ->oldWorkPList.c_str());
 					}
@@ -513,6 +541,9 @@ string FCworkPiece::FCService(string servjson)
 				else if(strWoRequest == "init")
 				{
 					replyRoot["woResponse"] = 0;
+					m_msgQ->manualReportList.clear();
+					m_msgQ->workPDetailResult = "";
+					m_msgQ->workPDetailRequest = "";
 				}
 				else if(strWoRequest == "init_result")
 				{
@@ -538,6 +569,49 @@ string FCworkPiece::FCService(string servjson)
 						replyRoot["woResponse"] = -1;
 						replyRoot["data"] = m_msgQ->downloadStatus;
 					}
+					else
+					{
+						replyRoot["woResponse"] = 0;
+					}
+				}
+				//请求工单详情
+				else if (strWoRequest == "detail")
+				{
+					/* code */
+					Json::Value jsonData = jsonRecv["data"];
+					m_msgQ->workPDetailRequest = jsonData["jobDispatchNo"].asString();
+					replyRoot["woResponse"] = 0;
+				}
+				else if (strWoRequest == "detail_result")
+				{
+					/* code */
+					if (m_msgQ->workPDetailResult != "")
+					{
+						/* code */
+						replyRoot["woResponse"] = 1;
+						replyRoot["data"] = m_msgQ->workPDetailResult;
+						m_msgQ->workPDetailResult = "";
+					}
+					else
+					{
+						replyRoot["woResponse"] = 0;
+					}
+				}
+				//手动报工请求
+				else if (strWoRequest == "manualReport")
+				{
+					/* code */
+					m_msgQ->manualReportList.push_back(jsonRecv["data"].asString());
+					replyRoot["woResponse"] = 0;
+				}
+				else if (strWoRequest == "manualReport_result")
+				{
+					/* code */
+					if (m_msgQ->manualReportList.empty())
+					{
+						/* code */
+						replyRoot["woResponse"] = 1;
+					} 
 					else
 					{
 						replyRoot["woResponse"] = 0;
