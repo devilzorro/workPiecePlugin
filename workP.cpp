@@ -182,9 +182,9 @@ void FCworkPiece::processHttpMsgThreadRun()
 		if (m_msgQ->workPDetailRequest != "")
 		{
 			/* code */
-			string tmpRequest = "equSerialNo=" + m_machineId + "&jobDispatchNo" + m_msgQ->workPDetailRequest + "&memberID=1";
+			string tmpRequest = "equSerialNo=" + m_machineId + "&jobDispatchNo=" + m_msgQ->workPDetailRequest + "&memberID=1";
 			m_msgQ->workPDetailResult =  m_httpManager->postStr(m_allListUrl,tmpRequest);
-
+			printf("post cmd:%s\npost url:%s\n",tmpRequest.c_str(),m_allListUrl.c_str());
 			m_msgQ->workPDetailRequest = "";
 		}
 		// if (!m_msgQ->httpMsgs.empty())
