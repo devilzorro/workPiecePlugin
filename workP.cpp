@@ -145,6 +145,7 @@ void FCworkPiece::sendLocalMsgThreadRun()
 			if (localMQStatus == 0)
 			{
 				/* code */
+				printf("send local MQ msgContent:%s\n",tmpRemoteMsg.c_str());
 				sendRemoteMsg(tmpRemoteMsg.c_str(),"WIS",103);
 			}
 			
@@ -562,6 +563,7 @@ string FCworkPiece::FCService(string servjson)
 					{
 						/* code */
 						replyRoot["woResponse"] = 1;
+						replyRoot["data"] = "下载成功！";
 					}
 					else if ((m_msgQ->downloadStatus != "end")&&(m_msgQ->downloadStatus != "start")&&(m_msgQ->downloadStatus != ""))
 					{
