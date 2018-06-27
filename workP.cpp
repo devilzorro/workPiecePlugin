@@ -564,6 +564,7 @@ string FCworkPiece::FCService(string servjson)
 						/* code */
 						replyRoot["woResponse"] = 1;
 						replyRoot["data"] = "下载成功！";
+						m_msgQ->downloadStatus = "";
 					}
 					else if ((m_msgQ->downloadStatus != "end")&&(m_msgQ->downloadStatus != "start")&&(m_msgQ->downloadStatus != ""))
 					{
